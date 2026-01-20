@@ -11,7 +11,7 @@
     body { font-family: system-ui, sans-serif; margin:0; background:var(--bg); color:var(--text); }
     header { background:var(--primary); color:var(--bg); padding:1rem; text-align:center; }
     main { padding:1rem; max-width:900px; margin:auto; }
-    h2 { margin-top:2rem; }
+    h2,h3 { margin-top:1.5rem; }
     form,.card { background:var(--card); padding:1rem; border-radius:14px; box-shadow:0 4px 10px rgba(0,0,0,.15); }
     label { display:block; margin-top:.75rem; font-weight:600; }
     input,textarea,select,button { width:100%; padding:.6rem; margin-top:.25rem; border-radius:8px; border:1px solid #374151; font-size:1rem; background:var(--bg); color:var(--text); }
@@ -19,7 +19,7 @@
     button.secondary { background:#6b7280; }
     button.danger { background:var(--danger); }
     button.small { font-size:.8rem; padding:.3rem .5rem; }
-    .entry { background:var(--card); margin-top:1rem; padding:.75rem; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,.15); display:flex; justify-content:space-between; gap:.5rem; }
+    .entry { background:var(--card); margin-top:.5rem; padding:.75rem; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,.15); display:flex; justify-content:space-between; gap:.5rem; }
     .row { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
     footer { text-align:center; font-size:.85rem; color:var(--muted); margin:2rem 0; }
     canvas { width:100%; max-height:280px; }
@@ -32,6 +32,7 @@
   <button class="small" onclick="toggleDark()">🌙 / ☀️</button>
 </header>
 <main>
+
 <form id="workoutForm">
   <h2>➕ Nuevo entrenamiento</h2>
   <label>Día de rutina</label>
@@ -40,74 +41,66 @@
     <option>Día 2 - Tirón</option>
     <option>Día 3 - Piernas y Glúteo</option>
   </select>
+
   <label>Ejercicio</label>
   <select id="exercise" required></select>
+
   <div class="row">
     <div><label>Peso (kg)</label><input type="number" id="weight" step="0.5" required></div>
     <div><label>Series</label><input type="number" id="sets" required></div>
   </div>
+
   <label>Repeticiones</label>
   <input type="number" id="reps" required>
+
   <label>Notas</label>
   <textarea id="notes"></textarea>
+
   <button type="submit">Guardar</button>
 </form>
 
 <div class="card">
-  <h2>🔍 Filtrar por ejercicio</h2>
-  <select id="filter"></select>
-</div>
-
-<div class="card">
-  <h2>📈 Progreso</h2></h2>
-  <canvas id="chart"></canvas>
-  <p id="volume"></p>
-</div>
-
-<h2>📋 Historial</h2>
-<div class="card">
-  <label>Filtrar por día</label>
-  <select id="filterDay">
-    <option value="">Todos</option>
-    <option>Día 1 - Empuje</option>
-    <option>Día 2 - Tirón</option>
-    <option>Día 3 - Piernas y Glúteo</option>
-  </select>
+  <h2>🔍 Selecciona fecha para ver tus ejercicios</h2>
+  <input type="date" id="filterDate">
 </div>
 <div id="log"></div>
 
 <div class="card">
-  <h2>📊 Estadísticas avanzadas</h2>
+  <h2>📈 Progreso</h2>
+  <canvas id="chart"></canvas>
+  <p id="volume"></p>
   <p id="stats"></p>
+  <p id="achievements"></p>
 </div>
 
 <div class="card">
   <h2>📦 Gestión de datos</h2>
   <button class="secondary" onclick="exportCSV()">Exportar CSV</button>
-<button class="secondary" onclick="exportBackup()">⬇️ Copia de seguridad</button>
-<input type="file" id="importFile" accept="application/json" onchange="importBackup(event)">()">Exportar CSV</button>
+  <button class="secondary" onclick="exportBackup()">⬇️ Copia de seguridad</button>
+  <input type="file" id="importFile" accept="application/json" onchange="importBackup(event)">
   <button class="danger" onclick="clearAll()">Borrar todo</button>
 </div>
+
 </main>
 <footer>Run Fit Life · PWA</footer>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const exercisesByDay={
-  'Día 1 - Empuje':['Press banca','Press banca inclinado','Press banca declinado','Aperturas en máquina','Press militar','Elevaciones frontales','Elevaciones laterales','Tríceps polea','Fondos'],
-  'Día 2 - Tirón':['Remo con barra','Jalón al pecho','Remo polea','Face pull','Curl bíceps','Curl martillo'],
-  'Día 3 - Piernas y Glúteo':['Sentadilla','Prensa','Peso muerto','Hip thrust','Extensión cuadríceps','Femoral','Gemelos']
+  'Día 1 - Empuje':[ 'Press banca','Press banca inclinado','Press banca declinado','Aperturas en máquina','Press militar','Elevaciones frontales','Elevaciones laterales con mancuernas','Elevaciones laterales con polea','Extensión de tríceps en polea','Extensión de tríceps tras nuca en polea','Tríceps katana','Fondos' ],
+  'Día 2 - Tirón':[ 'Remo con barra','Jalón al pecho agarre neutro','Remo con polea','Pullover en polea','Face pull en polea','Aperturas posteriores con mancuernas','Reverse fly en máquina','Curl de bíceps en banco Scott','Curl de bíceps codos atrás en banco','Curl martillo' ],
+  'Día 3 - Piernas y Glúteo':[ 'Zancada con saco','Peso muerto','Sentadillas en multipower','Extensión de cuádriceps','Prensa de pierna','Femoral unilateral','Máquina de abductor','Máquina de aductor','Hip thrust','Glúteo en máquina','Gemelos' ]
 };
 
 const STORAGE_KEY='gym_workouts';
 const form=document.getElementById('workoutForm');
 const daySelect=document.getElementById('day');
 const exerciseSelect=document.getElementById('exercise');
-const filter=document.getElementById('filter');
-const filterDay=document.getElementById('filterDay');
+const filterDate=document.getElementById('filterDate');
 const log=document.getElementById('log');
 const ctx=document.getElementById('chart');
 const volumeEl=document.getElementById('volume');
+const statsEl=document.getElementById('stats');
+const achievementsEl=document.getElementById('achievements');
 let chart;
 
 const getData=()=>JSON.parse(localStorage.getItem(STORAGE_KEY))||[];
@@ -116,7 +109,9 @@ const saveData=d=>localStorage.setItem(STORAGE_KEY,JSON.stringify(d));
 function updateExerciseOptions(){
   exerciseSelect.innerHTML='';
   exercisesByDay[daySelect.value].forEach(e=>{
-    const o=document.createElement('option');o.textContent=e;exerciseSelect.appendChild(o);
+    const o=document.createElement('option');
+    o.textContent=e;
+    exerciseSelect.appendChild(o);
   });
 }
 
@@ -124,104 +119,83 @@ daySelect.addEventListener('change',updateExerciseOptions);
 
 function refresh(){
   const data=getData();
-  let filtered=[...data];
-  if(filterDay.value) filtered=filtered.filter(w=>w.day===filterDay.value);
-  if(filter.value) filtered=filtered.filter(w=>w.exercise===filter.value);
-  loadFilter(data);
+  let filtered=data;
+  if(filterDate.value){
+    filtered = data.filter(w=>w.date === filterDate.value);
+  }
   renderLog(filtered);
   renderChart(filtered);
-}
-
-function loadFilter(data){
-  const ex=[...new Set(data.map(w=>w.exercise))];
-  filter.innerHTML='<option value="">Todos</option>'+ex.map(e=>`<option>${e}</option>`).join('');
+  renderStats(filtered);
+  renderAchievements(data);
 }
 
 function renderLog(data){
   log.innerHTML='';
-  const grouped={};
-  data.forEach(w=>{
-    grouped[w.date]=grouped[w.date]||[];
-    grouped[w.date].push(w);
+  data.forEach((w,i)=>{
+    const e=document.createElement('div');
+    e.className='entry';
+    e.innerHTML=`<div><strong>${w.day} - ${w.exercise}</strong><br>${w.weight}kg · ${w.sets}x${w.reps}</div>
+                   <button class='danger small' onclick='deleteEntry(${i})'>🗑️</button>`;
+    log.appendChild(e);
   });
-  Object.keys(grouped).reverse().forEach(date=>{
-    const dayDiv=document.createElement('div');
-    dayDiv.className='card';
-    dayDiv.innerHTML=`<h3>📅 ${date}</h3>`;
-    grouped[date].forEach((w,i)=>{
-      const e=document.createElement('div');
-      e.className='entry';
-      e.innerHTML=`<div><strong>${w.day} - ${w.exercise}</strong><br>${w.weight}kg · ${w.sets}x${w.reps}</div><button class="danger small" onclick="deleteOne(${i})">🗑️</button>`;
-      dayDiv.appendChild(e);
-    });
-    log.appendChild(dayDiv);
-  });
-} - ${w.exercise}</strong><br>${w.weight}kg · ${w.sets}x${w.reps}<br><small>${w.date}</small></div><button class="danger small" onclick="deleteOne(${i})">🗑️</button>`;
-    log.appendChild(div);
-  });
+}
+
+function deleteEntry(index){
+  const data=getData();
+  data.splice(index,1);
+  saveData(data);
+  refresh();
 }
 
 function renderChart(data){
   if(chart) chart.destroy();
-  if(!data.length){ volumeEl.textContent=''; document.getElementById('stats').textContent=''; return; }
+  if(!data.length){ volumeEl.textContent=''; return; }
   chart=new Chart(ctx,{type:'line',data:{labels:data.map(w=>w.date),datasets:[{label:'Peso',data:data.map(w=>w.weight)}]}});
   const totalVol=data.reduce((a,w)=>a+w.weight*w.sets*w.reps,0);
-  volumeEl.textContent='Volumen total: '+totalVol;
+  volumeEl.textContent='Volumen total levantado: '+totalVol+' kg';
+}
 
-  const byExercise={};
-  data.forEach(w=>{
-    byExercise[w.exercise]=byExercise[w.exercise]||[];
-    byExercise[w.exercise].push(w.weight);
-  });
-  let best=''; let bestVal=0;
-  Object.keys(byExercise).forEach(e=>{
-    const max=Math.max(...byExercise[e]);
-    if(max>bestVal){bestVal=max;best=`${e} (${max} kg)`;}
-  });
-  const stats=`Entrenamientos: ${data.length} · Mejor marca: ${best}`;
-  document.getElementById('stats').textContent=stats;
-}]}});
-  volumeEl.textContent='Volumen total: '+data.reduce((a,w)=>a+w.weight*w.sets*w.reps,0);
+function renderStats(data){
+  if(!data.length){ statsEl.textContent=''; return; }
+  const bestWeight=Math.max(...data.map(w=>w.weight));
+  const totalExercises=data.length;
+  statsEl.textContent=`Total de ejercicios: ${totalExercises} · Mayor peso levantado: ${bestWeight}kg`;
+}
+
+function renderAchievements(data){
+  achievementsEl.innerHTML='';
+  const totalSessions=data.length;
+  const totalVolume=data.reduce((a,w)=>a+w.weight*w.sets*w.reps,0);
+  let messages=[];
+  // Hit milestones
+  if(totalSessions>=5) messages.push('🎯 ¡5 entrenamientos completados! Sigue así!');
+  if(totalSessions>=10) messages.push('🏆 ¡10 entrenamientos completados! Eres imparable!');
+  if(totalSessions>=20) messages.push('💪 ¡20 entrenamientos! Tu fuerza está creciendo!');
+  if(totalVolume>=5000) messages.push('🔥 Volumen total 5000kg levantado! Excelente trabajo!');
+  if(totalVolume>=10000) messages.push('🏋️ Volumen total 10000kg levantado! Nivel pro!');
+  if(totalVolume>=20000) messages.push('🚀 Volumen total 20000kg alcanzado! Leyenda del gimnasio!');
+  // Frases motivadoras
+  if(totalSessions>0) messages.push('✨ ¡Cada repetición te acerca a tu mejor versión!');
+  if(totalSessions>5) messages.push('⚡ ¡Sigue empujando tus límites!');
+  achievementsEl.innerHTML=messages.join('<br>');
 }
 
 form.addEventListener('submit',e=>{
   e.preventDefault();
   const d=getData();
-  d.push({day:daySelect.value,exercise:exerciseSelect.value,weight:+weight.value,sets:+sets.value,reps:+reps.value,notes:notes.value,date:new Date().toLocaleDateString()});
-  saveData(d);form.reset();updateExerciseOptions();refresh();
+  const today=new Date().toISOString().split('T')[0];
+  d.push({ day:daySelect.value, exercise:exerciseSelect.value, weight:+weight.value, sets:+sets.value, reps:+reps.value, notes:notes.value, date:today });
+  saveData(d);
+  form.reset();
+  refresh();
 });
 
-filter.addEventListener('change',refresh);
-filterDay.addEventListener('change',refresh);
+filterDate.addEventListener('change',refresh);
 
-function deleteOne(i){const d=getData();d.splice(i,1);saveData(d);refresh();}
-function clearAll(){if(confirm('¿Borrar todo?')){localStorage.removeItem(STORAGE_KEY);refresh();}}
-function exportBackup(){
-  const data=getData();
-  const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='run_fit_life_backup.json';
-  a.click();
-}
-
-function importBackup(e){
-  const file=e.target.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    if(confirm('¿Restaurar datos? Se sobrescribirá todo.')){
-      localStorage.setItem(STORAGE_KEY,reader.result);
-      refresh();
-    }
-  };
-  reader.readAsText(file);
-}
-
-function exportCSV(){const d=getData();let c='Día,Fecha,Ejercicio,Peso,Series,Reps\n';d.forEach(w=>c+=`${w.day},${w.date},${w.exercise},${w.weight},${w.sets},${w.reps}\n`);const b=new Blob([c]);const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='run_fit_life.csv';a.click();}
 function toggleDark(){document.body.classList.toggle('dark');}
 
-updateExerciseOptions();refresh();
+updateExerciseOptions();
+refresh();
 </script>
 </body>
 </html>
