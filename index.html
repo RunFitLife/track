@@ -29,7 +29,7 @@
 <header>
   <h1>🏋️ Run Fit Life</h1>
   <p>Registra, analiza y mejora tus entrenamientos</p>
-  <button class="small" onclick="toggleDark()">🌙 / ☀️</button>
+  <button type="button" class="small" onclick="toggleDark()">🌙 / ☀️</button>
 </header>
 <main>
 
@@ -75,10 +75,10 @@
 
 <div class="card">
   <h2>📦 Gestión de datos</h2>
-  <button class="secondary" onclick="exportCSV()">Exportar CSV</button>
-  <button class="secondary" onclick="exportBackup()">⬇️ Copia de seguridad</button>
+  <button type="button" class="secondary" onclick="exportCSV()">Exportar CSV</button>
+  <button type="button" class="secondary" onclick="exportBackup()">⬇️ Copia de seguridad</button>
   <input type="file" id="importFile" accept="application/json" onchange="importBackup(event)">
-  <button class="danger" onclick="clearAll()">Borrar todo</button>
+  <button type="button" class="danger" onclick="clearAll()">Borrar todo</button>
 </div>
 
 </main>
@@ -138,7 +138,7 @@ function renderLog(data){
     const e=document.createElement('div');
     e.className='entry';
     e.innerHTML=`<div><strong>${w.day} - ${w.exercise}</strong><br>${w.weight}kg · ${w.sets}x${w.reps}</div>
-                   <button class='danger small' onclick='deleteEntry(${i})'>🗑️</button>`;
+                   <button type='button' class='danger small' onclick='deleteEntry(${i})'>🗑️</button>`;
     log.appendChild(e);
   });
 }
@@ -187,10 +187,60 @@ function renderAchievements(data){
     if(days>=60) messages.push(`🏋️ ${day}: ¡60 días! Casi un campeón.`);
     if(days>=100) messages.push(`🌟 ${day}: ¡100 días de entrenamiento! Leyenda del gimnasio.`);
     if(days>=365) messages.push(`🏅 ${day}: ¡Un año completo de constancia! Éxito total.`);
-    // Frases inclusivas para chicos y chicas
     if(days>=1) messages.push(`💖 ${day}: ¡Todos pueden lograrlo! Sigue adelante.`);
   }
   achievementsEl.innerHTML=messages.join('<br>');
+}
+
+// Funciones de exportación y backup
+function exportCSV(){
+  const data=getData();
+  if(!data.length) return;
+  const headers=['Fecha','Día','Ejercicio','Peso','Series','Repeticiones','Notas'];
+  const rows=data.map(d=>[d.date,d.day,d.exercise,d.weight,d.sets,d.reps,d.notes]);
+  let csvContent='data:text/csv;charset=utf-8,'+headers.join(',')+'\n';
+  rows.forEach(r=>{ csvContent+=r.join(',')+'\n'; });
+  const encodedUri=encodeURI(csvContent);
+  const link=document.createElement('a');
+  link.setAttribute('href',encodedUri);
+  link.setAttribute('download','gym_workouts.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function exportBackup(){
+  const data=JSON.stringify(getData());
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='gym_backup.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importBackup(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      saveData(data);
+      refresh();
+    }catch(err){ alert('Error al importar'); }
+  };
+  reader.readAsText(file);
+}
+
+function clearAll(){
+  if(confirm('¿Seguro que quieres borrar todo?')){
+    localStorage.removeItem(STORAGE_KEY);
+    refresh();
+  }
 }
 
 form.addEventListener('submit',e=>{
