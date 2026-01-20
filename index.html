@@ -160,24 +160,36 @@ function renderChart(data){
 
 function renderStats(data){
   if(!data.length){ statsEl.textContent=''; return; }
-  const bestWeight=Math.max(...data.map(w=>w.weight));
-  const totalExercises=data.length;
-  statsEl.textContent=`Total de ejercicios: ${totalExercises} · Mayor peso levantado: ${bestWeight}kg`;
+  const byDay={};
+  data.forEach(w=>{ byDay[w.day] = (byDay[w.day]||0)+1; });
+  let statsMsg='';
+  for(const day in byDay){ statsMsg+=`${day}: ${byDay[day]} días entrenados\n`; }
+  const byExercise={};
+  data.forEach(w=>{ byExercise[w.exercise]=Math.max(byExercise[w.exercise]||0,w.weight); });
+  for(const ex in byExercise){ statsMsg+=`Mayor peso en ${ex}: ${byExercise[ex]}kg\n`; }
+  statsEl.textContent=statsMsg;
 }
 
 function renderAchievements(data){
   achievementsEl.innerHTML='';
-  const totalSessions=data.length;
-  const totalVolume=data.reduce((a,w)=>a+w.weight*w.sets*w.reps,0);
+  const byDay={};
+  data.forEach(w=>{ byDay[w.day]=(byDay[w.day]||0)+1; });
   let messages=[];
-  if(totalSessions>=5) messages.push('🎯 ¡5 entrenamientos completados! Sigue así!');
-  if(totalSessions>=10) messages.push('🏆 ¡10 entrenamientos completados! Eres imparable!');
-  if(totalSessions>=20) messages.push('💪 ¡20 entrenamientos! Tu fuerza está creciendo!');
-  if(totalVolume>=5000) messages.push('🔥 Volumen total 5000kg levantado! Excelente trabajo!');
-  if(totalVolume>=10000) messages.push('🏋️ Volumen total 10000kg levantado! Nivel pro!');
-  if(totalVolume>=20000) messages.push('🚀 Volumen total 20000kg alcanzado! Leyenda del gimnasio!');
-  if(totalSessions>0) messages.push('✨ ¡Cada repetición te acerca a tu mejor versión!');
-  if(totalSessions>5) messages.push('⚡ ¡Sigue empujando tus límites!');
+  for(const day in byDay){
+    const days = byDay[day];
+    if(days>=1) messages.push(`✨ ${day}: ¡Buen inicio! Cada día cuenta.`);
+    if(days>=5) messages.push(`🎯 ${day}: ¡5 días completados! Sigue así.`);
+    if(days>=10) messages.push(`🏆 ${day}: ¡10 días completados! Nivel pro!`);
+    if(days>=20) messages.push(`🚀 ${day}: ¡20 días! Eres imparable!`);
+    if(days>=30) messages.push(`💥 ${day}: ¡30 días seguidos! Consistencia máxima.`);
+    if(days>=40) messages.push(`🔥 ${day}: ¡40 días entrenando! Estás en racha.`);
+    if(days>=50) messages.push(`💪 ${day}: ¡50 días! Tu fuerza es impresionante.`);
+    if(days>=60) messages.push(`🏋️ ${day}: ¡60 días! Casi un campeón.`);
+    if(days>=100) messages.push(`🌟 ${day}: ¡100 días de entrenamiento! Leyenda del gimnasio.`);
+    if(days>=365) messages.push(`🏅 ${day}: ¡Un año completo de constancia! Éxito total.`);
+    // Frases inclusivas para chicos y chicas
+    if(days>=1) messages.push(`💖 ${day}: ¡Todos pueden lograrlo! Sigue adelante.`);
+  }
   achievementsEl.innerHTML=messages.join('<br>');
 }
 
