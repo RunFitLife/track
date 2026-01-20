@@ -108,11 +108,14 @@ const saveData=d=>localStorage.setItem(STORAGE_KEY,JSON.stringify(d));
 
 function updateExerciseOptions(){
   exerciseSelect.innerHTML='';
-  exercisesByDay[daySelect.value].forEach(e=>{
-    const o=document.createElement('option');
-    o.textContent=e;
-    exerciseSelect.appendChild(o);
-  });
+  const day = daySelect.value;
+  if(exercisesByDay[day]){
+    exercisesByDay[day].forEach(e=>{
+      const o=document.createElement('option');
+      o.textContent=e;
+      exerciseSelect.appendChild(o);
+    });
+  }
 }
 
 daySelect.addEventListener('change',updateExerciseOptions);
@@ -167,14 +170,12 @@ function renderAchievements(data){
   const totalSessions=data.length;
   const totalVolume=data.reduce((a,w)=>a+w.weight*w.sets*w.reps,0);
   let messages=[];
-  // Hit milestones
   if(totalSessions>=5) messages.push('🎯 ¡5 entrenamientos completados! Sigue así!');
   if(totalSessions>=10) messages.push('🏆 ¡10 entrenamientos completados! Eres imparable!');
   if(totalSessions>=20) messages.push('💪 ¡20 entrenamientos! Tu fuerza está creciendo!');
   if(totalVolume>=5000) messages.push('🔥 Volumen total 5000kg levantado! Excelente trabajo!');
   if(totalVolume>=10000) messages.push('🏋️ Volumen total 10000kg levantado! Nivel pro!');
   if(totalVolume>=20000) messages.push('🚀 Volumen total 20000kg alcanzado! Leyenda del gimnasio!');
-  // Frases motivadoras
   if(totalSessions>0) messages.push('✨ ¡Cada repetición te acerca a tu mejor versión!');
   if(totalSessions>5) messages.push('⚡ ¡Sigue empujando tus límites!');
   achievementsEl.innerHTML=messages.join('<br>');
@@ -187,6 +188,7 @@ form.addEventListener('submit',e=>{
   d.push({ day:daySelect.value, exercise:exerciseSelect.value, weight:+weight.value, sets:+sets.value, reps:+reps.value, notes:notes.value, date:today });
   saveData(d);
   form.reset();
+  updateExerciseOptions();
   refresh();
 });
 
