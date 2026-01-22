@@ -156,6 +156,13 @@ canvas{width:100%;max-height:260px;margin-top:.5rem}
   </form>
 
   <h3>📊 Comparativa mensual</h3>
+  <label>Comparar desde:</label>
+  <input type="month" id="compareFrom">
+  <label>Comparar hasta:</label>
+  <input type="month" id="compareTo">
+  <button class="secondary" onclick="compareMonths()">Comparar</button>
+  <p id="comparison"></p>
+
   <canvas id="bodyChart"></canvas>
 </div>
 
@@ -219,12 +226,13 @@ const ctx=qs('chart');
 const bodyCtx=qs('bodyChart');
 let chart=null, bodyChart=null;
 
-/* ================== WORKOUT ================== */
+/* ================== DATA ================== */
 function getData(){return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}
 function saveData(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}
 function getBodyData(){return JSON.parse(localStorage.getItem(BODY_KEY))||[];}
 function saveBodyData(d){localStorage.setItem(BODY_KEY,JSON.stringify(d));}
 
+/* ================== WORKOUT ================== */
 function updateExerciseOptions(){
   exerciseSelect.innerHTML='';
   const day = daySelect.value;
@@ -246,7 +254,7 @@ function updateExerciseOptions(){
 
 function refresh(){
   const data=getData();
-  const filtered=filterDate.value?data.filter(w=>w.date===filterDate.value):data;
+  const filtered=filterDate.value?data.filter(w=>w.date===filterDate.value):data.filter(w=>w.date===today());
   renderLog(filtered);
   renderChart(filtered);
   renderStats(data);
@@ -262,8 +270,14 @@ function renderLog(data){
   data.forEach((w,i)=>{
     const e=document.createElement('div');
     e.className='entry';
-    e.innerHTML=`<div><strong>${w.exercise}</strong><br><span>${w.weight}kg · ${w.sets}x${w.reps}</span></div>
-    <button class="danger small" onclick="deleteEntry(${i})">🗑️</button>`;
+    e.innerHTML = `
+      <div>
+        <strong>${w.exercise}</strong><br>
+        <span>${w.weight}kg · ${w.sets}x${w.reps}</span><br>
+        ${w.notes ? `<em>Notas: ${w.notes}</em>` : ''}
+      </div>
+      <button class="danger small" onclick="deleteEntry(${i})">🗑️</button>
+    `;
     log.appendChild(e);
   });
 }
@@ -333,24 +347,57 @@ function renderBodyChart(){
   ]}});
 }
 
-/* ================== DATA ================== */
+/* ================== COMPARACIÓN ENTRE MESES ================== */
+function compareMonths(){
+  const fromMonth = qs('compareFrom').value;
+  const toMonth = qs('compareTo').value;
+  if(!fromMonth || !toMonth){qs('comparison').textContent='Selecciona ambos meses'; return;}
+  const d=getBodyData();
+  const parse = m=> new Date(m+'-01');
+  const fromData = d.filter(x=>parse(x.date.slice(0,7))>=parse(fromMonth) && parse(x.date.slice(0,7))<=parse(toMonth));
+  if(!fromData.length){qs('comparison').textContent='No hay datos en ese rango'; return;}
+  const first = fromData[0], last = fromData[fromData.length-1];
+  qs('comparison').innerHTML=`
+    Diferencia entre ${fromMonth} y ${toMonth}:<br>
+    Peso: ${(last.weight-first.weight).toFixed(1)} kg<br>
+    Músculo: ${(last.muscle-first.muscle).toFixed(1)} kg<br>
+    Grasa: ${(last.fat-first.fat).toFixed(1)} kg<br>
+    Hueso: ${(last.bone-first.bone).toFixed(1)} kg<br>
+    Agua: ${(last.water-first.water).toFixed(1)} kg<br>
+    Grasa visceral: ${(last.visceral-first.visceral).toFixed(1)}
+  `;
+}
+
+/* ================== DATA EXPORT/IMPORT ================== */
 function exportCSV(){
   const d=getData();
-  let csv='Fecha,Día,Ejercicio,Peso,Series,Reps\n';
-  d.forEach(w=>csv+=`${w.date},${w.day},${w.exercise},${w.weight},${w.sets},${w.reps}\n`);
+  let csv='Fecha,Día,Ejercicio,Peso,Series,Reps,Notas\n';
+  d.forEach(w=>csv+=`${w.date},${w.day},${w.exercise},${w.weight},${w.sets},${w.reps},"${w.notes}"\n`);
   download(csv,'runfitlife.csv','text/csv');
 }
 function exportBackup(){download(JSON.stringify(getData()),'backup.json','application/json');}
 function importBackup(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{saveData(JSON.parse(r.result));refresh();};r.readAsText(f);} 
 function clearAll(){if(confirm('¿Seguro?')){localStorage.clear();refresh();renderBodyChart();}}
+
 function download(c,n,t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click();}
 
 /* ================== INIT ================== */
 form.addEventListener('submit',e=>{
   e.preventDefault();
   const d=getData();
-  d.push({day:daySelect.value,exercise:exerciseSelect.value,weight:+qs('weight').value,sets:+qs('sets').value,reps:+qs('reps').value,notes:qs('notes').value,date:today()});
-  saveData(d);form.reset();updateExerciseOptions();refresh();
+  d.push({
+    day:daySelect.value,
+    exercise:exerciseSelect.value,
+    weight:+qs('weight').value,
+    sets:+qs('sets').value,
+    reps:+qs('reps').value,
+    notes:qs('notes').value,
+    date:today()
+  });
+  saveData(d);
+  form.reset();
+  updateExerciseOptions();
+  refresh();
 });
 
 daySelect.addEventListener('change',updateExerciseOptions);
@@ -358,9 +405,11 @@ filterDate.addEventListener('change',refresh);
 
 function toggleDark(){document.body.classList.toggle('dark');}
 
-updateExerciseOptions();refresh();renderBodyChart();
+/* Inicialización */
+filterDate.value = today();
+updateExerciseOptions();
+refresh();
+renderBodyChart();
 </script>
 </body>
 </html>
-
- 
