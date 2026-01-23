@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Run Fit Life</title>
-<meta name="theme-color" content="#111827" />
+<meta name="theme-color" content="#111827">
 <style>
 :root{
   --bg:#f3f4f6;--card:#ffffff;--text:#111827;--muted:#6b7280;
@@ -15,186 +15,140 @@ body.dark{
   --muted:#9ca3af;--primary:#e5e7eb;--accent:#4ade80;
 }
 *{box-sizing:border-box}
-body{
-  margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
-  background:var(--bg);color:var(--text);line-height:1.4;
-}
-header{
-  background:linear-gradient(135deg,#020617,#111827);
-  color:#fff;padding:1.5rem 1rem;text-align:center;position:sticky;top:0;z-index:10;
-}
-header h1{margin:0;font-size:1.6rem}
-header p{margin:.25rem 0 .75rem;color:#d1d5db}
-main{padding:1rem;max-width:900px;margin:auto}
-h2{margin-top:1.25rem;font-size:1.25rem}
-h3{margin-top:1rem;font-size:1.05rem}
-form,.card{
-  background:var(--card);padding:1rem;border-radius:18px;
-  box-shadow:0 10px 25px rgba(0,0,0,.12);margin-bottom:1rem;
-}
-label{display:block;margin-top:.75rem;font-weight:600;font-size:.9rem}
-input,textarea,select{
-  width:100%;padding:.65rem .75rem;margin-top:.25rem;
-  border-radius:10px;border:1px solid #374151;font-size:.95rem;
-  background:var(--bg);color:var(--text);
-}
-textarea{resize:none}
-button{
-  padding:.65rem .9rem;border-radius:999px;border:none;
-  font-weight:600;cursor:pointer;transition:.2s;
-}
-button:hover{transform:scale(1.02)}
-button.primary{background:var(--primary);color:var(--bg);width:100%;margin-top:1rem}
-button.secondary{background:#6b7280;color:#fff}
-button.danger{background:var(--danger);color:#fff}
-button.small{font-size:.75rem;padding:.3rem .6rem}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
-.entry{
-  background:var(--card);padding:.75rem 1rem;border-radius:14px;
-  box-shadow:0 4px 12px rgba(0,0,0,.12);
-  display:flex;justify-content:space-between;align-items:center;gap:.75rem;
-}
-.entry strong{font-size:.95rem}
-.entry span{font-size:.85rem;color:var(--muted)}
-.badge{
-  display:inline-block;padding:.25rem .6rem;border-radius:999px;
-  font-size:.75rem;background:var(--accent);color:#022c22;font-weight:600;
-  margin:.15rem;
-}
-footer{text-align:center;font-size:.8rem;color:var(--muted);margin:2rem 0 1rem}
-canvas{width:100%;max-height:260px;margin-top:.5rem}
+body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);}
+header{background:linear-gradient(135deg,#020617,#111827);color:#fff;padding:1.5rem 1rem;text-align:center;position:sticky;top:0;z-index:10;}
+header h1{margin:0;font-size:1.6rem;}
+header p{margin:.25rem 0 .75rem;color:#d1d5db;}
+main{padding:1rem;max-width:900px;margin:auto;}
+h2{margin-top:1.25rem;font-size:1.25rem;}
+h3{margin-top:1rem;font-size:1.05rem;}
+form,.card{background:var(--card);padding:1rem;border-radius:18px;box-shadow:0 10px 25px rgba(0,0,0,.12);margin-bottom:1rem;}
+label{display:block;margin-top:.75rem;font-weight:600;font-size:.9rem;}
+input,textarea,select{width:100%;padding:.65rem .75rem;margin-top:.25rem;border-radius:10px;border:1px solid #374151;font-size:.95rem;background:var(--bg);color:var(--text);}
+textarea{resize:none;}
+button{padding:.65rem .9rem;border-radius:999px;border:none;font-weight:600;cursor:pointer;transition:.2s;}
+button:hover{transform:scale(1.02);}
+button.primary{background:var(--primary);color:var(--bg);width:100%;margin-top:1rem;}
+button.secondary{background:#6b7280;color:#fff;}
+button.danger{background:var(--danger);color:#fff;}
+button.small{font-size:.75rem;padding:.3rem .6rem;}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.entry{background:var(--card);padding:.75rem 1rem;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,.12);display:flex;justify-content:space-between;align-items:center;gap:.75rem;}
+.entry strong{font-size:.95rem;}
+.entry span{font-size:.85rem;color:var(--muted);}
+.badge{display:inline-block;padding:.25rem .6rem;border-radius:999px;font-size:.75rem;background:var(--accent);color:#022c22;font-weight:600;margin:.15rem;}
+footer{text-align:center;font-size:.8rem;color:var(--muted);margin:2rem 0 1rem;}
+canvas{width:100%;max-height:260px;margin-top:.5rem;}
 </style>
 </head>
-
 <body>
 <header>
-  <h1>Run Fit Life</h1>
-  <p>Run towards a healthier life</p>
-  <button class="small" type="button" onclick="toggleDark()">🌙 / ☀️</button>
+<h1>Run Fit Life</h1>
+<p>Run towards a healthier life</p>
+<button class="small" type="button" onclick="toggleDark()">🌙 / ☀️</button>
 </header>
-
 <main>
 
-<!-- ================= ENTRENAMIENTOS ================= -->
 <form id="workoutForm">
-  <h2>➕ Nuevo entrenamiento</h2>
-
-  <label>Día de rutina</label>
-  <select id="day">
-    <option>Día 1 - Empuje</option>
-    <option>Día 2 - Tirón</option>
-    <option>Día 3 - Piernas y Glúteo</option>
-    <option>Día 4 - Abdominales</option>
-  </select>
-
-  <label>Ejercicio</label>
-  <select id="exercise"></select>
-
-  <div class="row">
-    <div><label>Peso (kg)</label><input type="number" id="weight" step="0.5"></div>
-    <div><label>Series</label><input type="number" id="sets"></div>
-  </div>
-
-  <label>Repeticiones</label>
-  <input type="number" id="reps">
-
-  <label>Notas</label>
-  <textarea id="notes"></textarea>
-
-  <button class="primary" type="submit">Guardar</button>
+<h2>➕ Nuevo entrenamiento</h2>
+<label>Día de rutina</label>
+<select id="day">
+<option>Día 1 - Empuje</option>
+<option>Día 2 - Tirón</option>
+<option>Día 3 - Piernas y Glúteo</option>
+<option>Día 4 - Abdominales</option>
+</select>
+<label>Ejercicio</label>
+<select id="exercise"></select>
+<div class="row">
+<div><label>Peso (kg)</label><input type="number" id="weight" step="0.5"></div>
+<div><label>Series</label><input type="number" id="sets"></div>
+</div>
+<label>Repeticiones</label>
+<input type="number" id="reps">
+<label>Notas</label>
+<textarea id="notes"></textarea>
+<button class="primary" type="submit">Guardar</button>
 </form>
 
 <div class="card">
-  <h2>🔍 Filtrar por fecha</h2>
-  <input type="date" id="filterDate">
+<h2>🔍 Filtrar por fecha</h2>
+<input type="date" id="filterDate">
 </div>
 
 <div id="log"></div>
 
 <div class="card">
-  <h2>📈 Estadísticas</h2>
-  <canvas id="chart"></canvas>
-  <p id="volume"></p>
-  <p id="stats"></p>
+<h2>📈 Estadísticas</h2>
+<canvas id="chart"></canvas>
+<p id="volume"></p>
+<p id="stats"></p>
 </div>
 
 <div class="card">
-  <h2>🏆 Logros y medallas</h2>
-  <div id="medals"></div>
-  <p id="achievements"></p>
+<h2>🏆 Logros y medallas</h2>
+<div id="medals"></div>
+<p id="achievements"></p>
 </div>
 
 <div class="card">
-  <h2>📅 Resumen</h2>
-  <p id="weeklySummary"></p>
-  <p id="monthlySummary"></p>
+<h2>📅 Resumen</h2>
+<p id="weeklySummary"></p>
+<p id="monthlySummary"></p>
 </div>
 
 <div class="card">
-  <h2>💪 Récords personales</h2>
-  <p id="records"></p>
+<h2>💪 Récords personales</h2>
+<p id="records"></p>
 </div>
 
-<!-- ================= CONTROL CORPORAL ================= -->
 <div class="card">
-  <h2>⚖️ Control corporal mensual</h2>
+<h2>⚖️ Control corporal mensual</h2>
 
-  <!-- Último pesaje -->
-  <div class="card">
-    <h3>📊 Último pesaje</h3>
-    <div id="lastBody">No hay datos aún</div>
-  </div>
-
-  <!-- Formulario de nuevo pesaje -->
-  <form id="bodyForm">
-    <label>Fecha</label>
-    <input type="month" id="bodyDate" required>
-
-    <div class="row">
-      <div><label>Peso (kg)</label><input type="number" step="0.1" id="bodyWeight" required></div>
-      <div><label>Agua (kg)</label><input type="number" step="0.1" id="bodyWater"></div>
-    </div>
-
-    <div class="row">
-      <div><label>Músculo (kg)</label><input type="number" step="0.1" id="bodyMuscle"></div>
-      <div><label>Grasa (kg)</label><input type="number" step="0.1" id="bodyFat"></div>
-    </div>
-
-    <div class="row">
-      <div><label>Hueso (kg)</label><input type="number" step="0.1" id="bodyBone"></div>
-      <div><label>Grasa visceral</label><input type="number" step="0.1" id="bodyVisceral"></div>
-    </div>
-
-    <button class="primary" type="submit">Guardar medición</button>
-  </form>
-
-  <!-- Gráfico -->
-  <h3>📈 Evolución</h3>
-  <canvas id="bodyChart"></canvas>
-
-  <!-- Comparar pesajes -->
-  <h3>📊 Comparar pesajes</h3>
-  <label>Comparar desde:</label>
-  <input type="month" id="compareFrom">
-
-  <label>Comparar hasta:</label>
-  <input type="month" id="compareTo">
-
-  <button class="secondary" type="button" onclick="compareMonths()">Comparar</button>
-  <p id="comparison"></p>
-
-  <!-- Historial -->
-  <button class="secondary" type="button" onclick="toggleBodyHistory()">📂 Ver / ocultar historial</button>
-  <div id="bodyHistory" style="display:none"></div>
+<div class="card">
+<h3>📊 Último pesaje</h3>
+<div id="lastBody">No hay datos aún</div>
 </div>
 
-<!-- ================= GESTIÓN DE DATOS ================= -->
+<form id="bodyForm">
+<label>Fecha</label>
+<input type="month" id="bodyDate" required>
+<div class="row">
+<div><label>Peso (kg)</label><input type="number" step="0.1" id="bodyWeight" required></div>
+<div><label>Agua (kg)</label><input type="number" step="0.1" id="bodyWater"></div>
+</div>
+<div class="row">
+<div><label>Músculo (kg)</label><input type="number" step="0.1" id="bodyMuscle"></div>
+<div><label>Grasa (kg)</label><input type="number" step="0.1" id="bodyFat"></div>
+</div>
+<div class="row">
+<div><label>Hueso (kg)</label><input type="number" step="0.1" id="bodyBone"></div>
+<div><label>Grasa visceral</label><input type="number" step="0.1" id="bodyVisceral"></div>
+</div>
+<button class="primary" type="submit">Guardar medición</button>
+</form>
+
+<h3>📈 Evolución</h3>
+<canvas id="bodyChart"></canvas>
+
+<h3>📊 Comparar pesajes</h3>
+<label>Comparar desde:</label>
+<input type="month" id="compareFrom">
+<label>Comparar hasta:</label>
+<input type="month" id="compareTo">
+<button class="secondary" type="button" onclick="compareMonths()">Comparar</button>
+<p id="comparison"></p>
+
+<button class="secondary" type="button" onclick="toggleBodyHistory()">📂 Ver / ocultar historial</button>
+<div id="bodyHistory" style="display:none"></div>
+</div>
+
 <div class="card">
-  <h2>📦 Gestión de datos</h2>
-  <button class="secondary" onclick="exportCSV()">Exportar CSV</button>
-  <button class="secondary" onclick="exportBackup()">⬇️ Copia de seguridad</button>
-  <input type="file" id="importFile" accept="application/json" onchange="importBackup(event)">
-  <button class="danger" onclick="clearAll()">Borrar todo</button>
+<h2>📦 Gestión de datos</h2>
+<button class="secondary" onclick="exportCSV()">Exportar CSV</button>
+<button class="secondary" onclick="exportBackup()">⬇️ Copia de seguridad</button>
+<input type="file" id="importFile" accept="application/json" onchange="importBackup(event)">
+<button class="danger" onclick="clearAll()">Borrar todo</button>
 </div>
 
 </main>
@@ -202,157 +156,50 @@ canvas{width:100%;max-height:260px;margin-top:.5rem}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-/* ================== VARIABLES Y UTILS ================== */
 const STORAGE_KEY='gym_workouts';
 const BODY_KEY='body_tracking';
 const qs=id=>document.getElementById(id);
 const today=()=>new Date().toISOString().split('T')[0];
-const uniq=a=>[...new Set(a)];
-
-/* ================== ENTRENAMIENTOS ================== */
-const exercisesByDay={
-  'Día 1 - Empuje':{Pecho:['Press banca'],Hombro:['Press militar'],Tríceps:['Extensión polea']},
-  'Día 2 - Tirón':{Espalda:['Remo'],Bíceps:['Curl bíceps']},
-  'Día 3 - Piernas y Glúteo':{Piernas:['Sentadilla','Prensa']},
-  'Día 4 - Abdominales':{Core:['Plancha','Crunch']}
-};
+let bodyChart=null;
+const exercisesByDay={'Día 1 - Empuje':{Pecho:['Press banca'],Hombro:['Press militar'],Tríceps:['Extensión polea']},'Día 2 - Tirón':{Espalda:['Remo'],Bíceps:['Curl bíceps']},'Día 3 - Piernas y Glúteo':{Piernas:['Sentadilla','Prensa']},'Día 4 - Abdominales':{Core:['Plancha','Crunch']}};
 
 function getData(){return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}
 function saveData(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}
 function getBodyData(){return JSON.parse(localStorage.getItem(BODY_KEY))||[];}
 function saveBodyData(d){localStorage.setItem(BODY_KEY,JSON.stringify(d));}
 
-function updateExerciseOptions(){
-  const day=qs('day').value;
-  const sel=qs('exercise');
-  sel.innerHTML='';
-  Object.values(exercisesByDay[day]).flat().forEach(e=>{
-    const o=document.createElement('option'); o.textContent=e; sel.appendChild(o);
-  });
-}
+function updateExerciseOptions(){const day=qs('day').value;const sel=qs('exercise');sel.innerHTML='';Object.values(exercisesByDay[day]).flat().forEach(e=>{const o=document.createElement('option');o.textContent=e;sel.appendChild(o);});}
+function refresh(){filterByDate();}
+function renderLog(d){const log=qs('log');log.innerHTML='';d.forEach((w,i)=>log.innerHTML+=`<div class="entry"><div><strong>${w.exercise}</strong><br><span>${w.weight}kg · ${w.sets}x${w.reps}</span></div><button class="danger small" onclick="deleteWorkout(${i})">🗑️</button></div>`);}
+function deleteWorkout(i){const d=getData();d.splice(i,1);saveData(d);refresh();}
+qs('workoutForm').addEventListener('submit',e=>{e.preventDefault();const d=getData();d.push({day:qs('day').value,exercise:qs('exercise').value,weight:+qs('weight').value||0,sets:+qs('sets').value||0,reps:+qs('reps').value||0,notes:qs('notes').value,date:today()});saveData(d);e.target.reset();updateExerciseOptions();refresh();});
 
-qs('workoutForm').addEventListener('submit',e=>{
-  e.preventDefault();
-  const d=getData();
-  d.push({
-    day:qs('day').value,
-    exercise:qs('exercise').value,
-    weight:+qs('weight').value||0,
-    sets:+qs('sets').value||0,
-    reps:+qs('reps').value||0,
-    notes:qs('notes').value,
-    date:today()
-  });
-  saveData(d); e.target.reset(); updateExerciseOptions(); refresh();
-});
+// FILTRO POR FECHA HOY
+qs('filterDate').value=today();
+function filterByDate(){const selected=qs('filterDate').value;const all=getData();const filtered=all.filter(w=>w.date===selected);renderLog(filtered);}
+qs('filterDate').addEventListener('change',filterByDate);
 
-function refresh(){
-  renderLog(getData());
-}
+qs('bodyForm').addEventListener('submit',e=>{e.preventDefault();const d=getBodyData();d.push({date:qs('bodyDate').value,weight:+qs('bodyWeight').value,water:+qs('bodyWater').value||0,muscle:+qs('bodyMuscle').value||0,fat:+qs('bodyFat').value||0,bone:+qs('bodyBone').value||0,visceral:+qs('bodyVisceral').value||0});saveBodyData(d);e.target.reset();renderBodyChart();renderLastBody();renderBodyHistory();});
 
-function renderLog(d){
-  const log=qs('log'); log.innerHTML='';
-  d.forEach((w,i)=>log.innerHTML+=`
-    <div class="entry">
-      <div><strong>${w.exercise}</strong><br><span>${w.weight}kg · ${w.sets}x${w.reps}</span></div>
-      <button class="danger small" onclick="deleteWorkout(${i})">🗑️</button>
-    </div>
-  `);
-}
+function renderBodyChart(){const d=getBodyData();if(bodyChart)bodyChart.destroy();if(!d.length)return;bodyChart=new Chart(qs('bodyChart'),{type:'line',data:{labels:d.map(x=>x.date),datasets:[{label:'Peso',data:d.map(x=>x.weight)},{label:'Músculo',data:d.map(x=>x.muscle)},{label:'Grasa',data:d.map(x=>x.fat)}]}});}
+function renderLastBody(){const d=getBodyData(),div=qs('lastBody');if(!d.length){div.textContent='No hay datos aún';return;}const u=d[d.length-1];div.innerHTML=`<strong>${u.date}</strong><br>Peso: ${u.weight} kg<br>Músculo: ${u.muscle} · Grasa: ${u.fat}<br>Agua: ${u.water} · Hueso: ${u.bone}<br>Grasa visceral: ${u.visceral}`;}
+function renderBodyHistory(){const d=getBodyData(),div=qs('bodyHistory');div.innerHTML='';d.forEach((x,i)=>div.innerHTML+=`<div class="entry"><div>${x.date}<br>${x.weight}kg · M:${x.muscle} · G:${x.fat}</div><button class="danger small" onclick="deleteBody(${i})">🗑️</button></div>`);}
+function deleteBody(i){const d=getBodyData();d.splice(i,1);saveBodyData(d);renderBodyChart();renderLastBody();renderBodyHistory();}
+function toggleBodyHistory(){const d=qs('bodyHistory');d.style.display=d.style.display==='none'?'block':'none';renderBodyHistory();}
 
-function deleteWorkout(i){
-  const d=getData(); d.splice(i,1); saveData(d); refresh();
-}
+function compareMonths(){const from=qs('compareFrom').value,to=qs('compareTo').value,out=qs('comparison');if(!from||!to){out.textContent='Selecciona ambos meses';return;}const d=getBodyData(),parse=m=>new Date(m+'-01');const range=d.filter(x=>{const m=x.date.slice(0,7);return parse(m)>=parse(from)&&parse(m)<=parse(to);});if(range.length<2){out.textContent='No hay suficientes datos para comparar';return;}const first=range[0],last=range[range.length-1];out.innerHTML=`<strong>Resultado:</strong><br>Peso: ${(last.weight-first.weight).toFixed(1)} kg<br>Músculo: ${(last.muscle-first.muscle).toFixed(1)} kg<br>Grasa: ${(last.fat-first.fat).toFixed(1)} kg<br>Agua: ${(last.water-first.water).toFixed(1)} kg<br>Hueso: ${(last.bone-first.bone).toFixed(1)} kg<br>Grasa visceral: ${(last.visceral-first.visceral).toFixed(1)}`;}
 
-/* ================== CONTROL CORPORAL ================== */
-let bodyChart=null;
-
-qs('bodyForm').addEventListener('submit',e=>{
-  e.preventDefault();
-  const d=getBodyData();
-  d.push({
-    date:qs('bodyDate').value,
-    weight:+qs('bodyWeight').value,
-    water:+qs('bodyWater').value||0,
-    muscle:+qs('bodyMuscle').value||0,
-    fat:+qs('bodyFat').value||0,
-    bone:+qs('bodyBone').value||0,
-    visceral:+qs('bodyVisceral').value||0
-  });
-  saveBodyData(d); e.target.reset();
-  renderBodyChart(); renderLastBody(); renderBodyHistory();
-});
-
-function renderBodyChart(){
-  const d=getBodyData(); if(bodyChart) bodyChart.destroy();
-  if(!d.length) return;
-  bodyChart=new Chart(qs('bodyChart'),{
-    type:'line',
-    data:{
-      labels:d.map(x=>x.date),
-      datasets:[
-        {label:'Peso',data:d.map(x=>x.weight)},
-        {label:'Músculo',data:d.map(x=>x.muscle)},
-        {label:'Grasa',data:d.map(x=>x.fat)}
-      ]
-    }
-  });
-}
-
-function renderLastBody(){
-  const d=getBodyData(), div=qs('lastBody');
-  if(!d.length){div.textContent='No hay datos aún'; return;}
-  const u=d[d.length-1];
-  div.innerHTML=`<strong>${u.date}</strong><br>Peso: ${u.weight} kg<br>Músculo: ${u.muscle} · Grasa: ${u.fat}<br>Agua: ${u.water} · Hueso: ${u.bone}<br>Grasa visceral: ${u.visceral}`;
-}
-
-function renderBodyHistory(){
-  const d=getBodyData(), div=qs('bodyHistory'); div.innerHTML='';
-  d.forEach((x,i)=>div.innerHTML+=`
-    <div class="entry">
-      <div>${x.date}<br>${x.weight}kg · M:${x.muscle} · G:${x.fat}</div>
-      <button class="danger small" onclick="deleteBody(${i})">🗑️</button>
-    </div>
-  `);
-}
-
-function deleteBody(i){ const d=getBodyData(); d.splice(i,1); saveBodyData(d); renderBodyChart(); renderLastBody(); renderBodyHistory(); }
-function toggleBodyHistory(){ const d=qs('bodyHistory'); d.style.display=d.style.display==='none'?'block':'none'; renderBodyHistory(); }
-
-/* ================== COMPARAR PESAJES ================== */
-function compareMonths(){
-  const from=qs('compareFrom').value, to=qs('compareTo').value, out=qs('comparison');
-  if(!from||!to){ out.textContent='Selecciona ambos meses'; return; }
-  const d=getBodyData(), parse=m=>new Date(m+'-01');
-  const range=d.filter(x=>{const m=x.date.slice(0,7); return parse(m)>=parse(from)&&parse(m)<=parse(to);});
-  if(range.length<2){ out.textContent='No hay suficientes datos para comparar'; return;}
-  const first=range[0], last=range[range.length-1];
-  out.innerHTML=`<strong>Resultado:</strong><br>
-    Peso: ${(last.weight-first.weight).toFixed(1)} kg<br>
-    Músculo: ${(last.muscle-first.muscle).toFixed(1)} kg<br>
-    Grasa: ${(last.fat-first.fat).toFixed(1)} kg<br>
-    Agua: ${(last.water-first.water).toFixed(1)} kg<br>
-    Hueso: ${(last.bone-first.bone).toFixed(1)} kg<br>
-    Grasa visceral: ${(last.visceral-first.visceral).toFixed(1)}
-  `;
-}
-
-/* ================== EXPORT / IMPORT ================== */
-function exportCSV(){ const d=getData(); let csv='Fecha,Día,Ejercicio,Peso,Series,Reps,Notas\n'; d.forEach(w=>csv+=`${w.date},${w.day},${w.exercise},${w.weight},${w.sets},${w.reps},"${w.notes}"\n`); download(csv,'runfitlife.csv','text/csv'); }
-function exportBackup(){ download(JSON.stringify(getData()),'backup.json','application/json'); }
-function importBackup(e){ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{saveData(JSON.parse(r.result)); refresh();}; r.readAsText(f); }
-function clearAll(){ if(confirm('¿Seguro?')){ localStorage.clear(); refresh(); renderBodyChart(); renderLastBody(); renderBodyHistory(); } }
-
-function download(c,n,t){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([c],{type:t})); a.download=n; a.click(); }
-
+function exportCSV(){const d=getData();let csv='Fecha,Día,Ejercicio,Peso,Series,Reps,Notas\n';d.forEach(w=>csv+=`${w.date},${w.day},${w.exercise},${w.weight},${w.sets},${w.reps},"${w.notes}"\n`);download(csv,'runfitlife.csv','text/csv');}
+function exportBackup(){download(JSON.stringify(getData()),'backup.json','application/json');}
+function importBackup(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{saveData(JSON.parse(r.result));refresh();};r.readAsText(f);}
+function clearAll(){if(confirm('¿Seguro?')){localStorage.clear();refresh();renderBodyChart();renderLastBody();renderBodyHistory();}}
+function download(c,n,t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click();}
 function toggleDark(){document.body.classList.toggle('dark');}
 
-/* ================== INIT ================== */
 updateExerciseOptions();
 refresh();
 renderBodyChart();
 renderLastBody();
 </script>
-
 </body>
 </html>
