@@ -139,11 +139,13 @@ canvas{width:100%;max-height:260px;margin-top:.5rem}
 <div class="card">
   <h2>⚖️ Control corporal mensual</h2>
 
+  <!-- Último pesaje -->
   <div class="card">
     <h3>📊 Último pesaje</h3>
     <div id="lastBody">No hay datos aún</div>
   </div>
 
+  <!-- Formulario de nuevo pesaje -->
   <form id="bodyForm">
     <label>Fecha</label>
     <input type="month" id="bodyDate" required>
@@ -159,19 +161,34 @@ canvas{width:100%;max-height:260px;margin-top:.5rem}
     </div>
 
     <div class="row">
-      <div><label>Hueso sin grasa (kg)</label><input type="number" step="0.1" id="bodyBone"></div>
+      <div><label>Hueso (kg)</label><input type="number" step="0.1" id="bodyBone"></div>
       <div><label>Grasa visceral</label><input type="number" step="0.1" id="bodyVisceral"></div>
     </div>
 
     <button class="primary" type="submit">Guardar medición</button>
   </form>
 
-  <button class="secondary" onclick="toggleBodyHistory()">📂 Ver / ocultar historial</button>
-  <div id="bodyHistory" style="display:none;"></div>
-
+  <!-- Gráfico -->
+  <h3>📈 Evolución</h3>
   <canvas id="bodyChart"></canvas>
+
+  <!-- Comparar pesajes -->
+  <h3>📊 Comparar pesajes</h3>
+  <label>Comparar desde:</label>
+  <input type="month" id="compareFrom">
+
+  <label>Comparar hasta:</label>
+  <input type="month" id="compareTo">
+
+  <button class="secondary" type="button" onclick="compareMonths()">Comparar</button>
+  <p id="comparison"></p>
+
+  <!-- Historial -->
+  <button class="secondary" type="button" onclick="toggleBodyHistory()">📂 Ver / ocultar historial</button>
+  <div id="bodyHistory" style="display:none"></div>
 </div>
 
+<!-- ================= GESTIÓN DE DATOS ================= -->
 <div class="card">
   <h2>📦 Gestión de datos</h2>
   <button class="secondary" onclick="exportCSV()">Exportar CSV</button>
@@ -181,24 +198,18 @@ canvas{width:100%;max-height:260px;margin-top:.5rem}
 </div>
 
 </main>
-
 <footer>Run Fit Life · PWA</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-/* ================== CONFIG Y DATA ================== */
+/* ================== VARIABLES Y UTILS ================== */
 const STORAGE_KEY='gym_workouts';
 const BODY_KEY='body_tracking';
 const qs=id=>document.getElementById(id);
-const uniq=a=>[...new Set(a)];
 const today=()=>new Date().toISOString().split('T')[0];
+const uniq=a=>[...new Set(a)];
 
-function getData(){return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}
-function saveData(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}
-function getBodyData(){return JSON.parse(localStorage.getItem(BODY_KEY))||[];}
-function saveBodyData(d){localStorage.setItem(BODY_KEY,JSON.stringify(d));}
-
-/* ================== WORKOUT ================== */
+/* ================== ENTRENAMIENTOS ================== */
 const exercisesByDay={
   'Día 1 - Empuje':{Pecho:['Press banca'],Hombro:['Press militar'],Tríceps:['Extensión polea']},
   'Día 2 - Tirón':{Espalda:['Remo'],Bíceps:['Curl bíceps']},
@@ -206,14 +217,17 @@ const exercisesByDay={
   'Día 4 - Abdominales':{Core:['Plancha','Crunch']}
 };
 
+function getData(){return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}
+function saveData(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}
+function getBodyData(){return JSON.parse(localStorage.getItem(BODY_KEY))||[];}
+function saveBodyData(d){localStorage.setItem(BODY_KEY,JSON.stringify(d));}
+
 function updateExerciseOptions(){
   const day=qs('day').value;
   const sel=qs('exercise');
   sel.innerHTML='';
   Object.values(exercisesByDay[day]).flat().forEach(e=>{
-    const o=document.createElement('option');
-    o.textContent=e;
-    sel.appendChild(o);
+    const o=document.createElement('option'); o.textContent=e; sel.appendChild(o);
   });
 }
 
@@ -229,10 +243,7 @@ qs('workoutForm').addEventListener('submit',e=>{
     notes:qs('notes').value,
     date:today()
   });
-  saveData(d);
-  e.target.reset();
-  updateExerciseOptions();
-  refresh();
+  saveData(d); e.target.reset(); updateExerciseOptions(); refresh();
 });
 
 function refresh(){
@@ -240,28 +251,20 @@ function refresh(){
 }
 
 function renderLog(d){
-  const log=qs('log');
-  log.innerHTML='';
-  d.forEach((w,i)=>{
-    log.innerHTML+=`
-      <div class="entry">
-        <div>
-          <strong>${w.exercise}</strong><br>
-          <span>${w.weight}kg · ${w.sets}x${w.reps}</span>
-        </div>
-        <button class="danger small" onclick="deleteWorkout(${i})">🗑️</button>
-      </div>`;
-  });
+  const log=qs('log'); log.innerHTML='';
+  d.forEach((w,i)=>log.innerHTML+=`
+    <div class="entry">
+      <div><strong>${w.exercise}</strong><br><span>${w.weight}kg · ${w.sets}x${w.reps}</span></div>
+      <button class="danger small" onclick="deleteWorkout(${i})">🗑️</button>
+    </div>
+  `);
 }
 
 function deleteWorkout(i){
-  const d=getData();
-  d.splice(i,1);
-  saveData(d);
-  refresh();
+  const d=getData(); d.splice(i,1); saveData(d); refresh();
 }
 
-/* ================== BODY ================== */
+/* ================== CONTROL CORPORAL ================== */
 let bodyChart=null;
 
 qs('bodyForm').addEventListener('submit',e=>{
@@ -276,57 +279,12 @@ qs('bodyForm').addEventListener('submit',e=>{
     bone:+qs('bodyBone').value||0,
     visceral:+qs('bodyVisceral').value||0
   });
-  saveBodyData(d);
-  e.target.reset();
-  renderLastBody();
-  renderBodyHistory();
-  renderBodyChart();
+  saveBodyData(d); e.target.reset();
+  renderBodyChart(); renderLastBody(); renderBodyHistory();
 });
 
-function renderLastBody(){
-  const d=getBodyData();
-  const div=qs('lastBody');
-  if(!d.length){div.textContent='No hay datos aún';return;}
-  const u=d[d.length-1];
-  div.innerHTML=`
-    <strong>${u.date}</strong><br>
-    Peso: ${u.weight} kg<br>
-    Músculo: ${u.muscle} · Grasa: ${u.fat}<br>
-    Agua: ${u.water} · Hueso: ${u.bone}<br>
-    Grasa visceral: ${u.visceral}`;
-}
-
-function renderBodyHistory(){
-  const d=getBodyData();
-  const div=qs('bodyHistory');
-  div.innerHTML='';
-  d.forEach((x,i)=>{
-    div.innerHTML+=`
-      <div class="entry">
-        <div>${x.date}<br>${x.weight}kg</div>
-        <button class="danger small" onclick="deleteBody(${i})">🗑️</button>
-      </div>`;
-  });
-}
-
-function deleteBody(i){
-  const d=getBodyData();
-  d.splice(i,1);
-  saveBodyData(d);
-  renderLastBody();
-  renderBodyHistory();
-  renderBodyChart();
-}
-
-function toggleBodyHistory(){
-  const d=qs('bodyHistory');
-  d.style.display=d.style.display==='none'?'block':'none';
-  renderBodyHistory();
-}
-
 function renderBodyChart(){
-  const d=getBodyData();
-  if(bodyChart) bodyChart.destroy();
+  const d=getBodyData(); if(bodyChart) bodyChart.destroy();
   if(!d.length) return;
   bodyChart=new Chart(qs('bodyChart'),{
     type:'line',
@@ -341,45 +299,59 @@ function renderBodyChart(){
   });
 }
 
+function renderLastBody(){
+  const d=getBodyData(), div=qs('lastBody');
+  if(!d.length){div.textContent='No hay datos aún'; return;}
+  const u=d[d.length-1];
+  div.innerHTML=`<strong>${u.date}</strong><br>Peso: ${u.weight} kg<br>Músculo: ${u.muscle} · Grasa: ${u.fat}<br>Agua: ${u.water} · Hueso: ${u.bone}<br>Grasa visceral: ${u.visceral}`;
+}
+
+function renderBodyHistory(){
+  const d=getBodyData(), div=qs('bodyHistory'); div.innerHTML='';
+  d.forEach((x,i)=>div.innerHTML+=`
+    <div class="entry">
+      <div>${x.date}<br>${x.weight}kg · M:${x.muscle} · G:${x.fat}</div>
+      <button class="danger small" onclick="deleteBody(${i})">🗑️</button>
+    </div>
+  `);
+}
+
+function deleteBody(i){ const d=getBodyData(); d.splice(i,1); saveBodyData(d); renderBodyChart(); renderLastBody(); renderBodyHistory(); }
+function toggleBodyHistory(){ const d=qs('bodyHistory'); d.style.display=d.style.display==='none'?'block':'none'; renderBodyHistory(); }
+
+/* ================== COMPARAR PESAJES ================== */
+function compareMonths(){
+  const from=qs('compareFrom').value, to=qs('compareTo').value, out=qs('comparison');
+  if(!from||!to){ out.textContent='Selecciona ambos meses'; return; }
+  const d=getBodyData(), parse=m=>new Date(m+'-01');
+  const range=d.filter(x=>{const m=x.date.slice(0,7); return parse(m)>=parse(from)&&parse(m)<=parse(to);});
+  if(range.length<2){ out.textContent='No hay suficientes datos para comparar'; return;}
+  const first=range[0], last=range[range.length-1];
+  out.innerHTML=`<strong>Resultado:</strong><br>
+    Peso: ${(last.weight-first.weight).toFixed(1)} kg<br>
+    Músculo: ${(last.muscle-first.muscle).toFixed(1)} kg<br>
+    Grasa: ${(last.fat-first.fat).toFixed(1)} kg<br>
+    Agua: ${(last.water-first.water).toFixed(1)} kg<br>
+    Hueso: ${(last.bone-first.bone).toFixed(1)} kg<br>
+    Grasa visceral: ${(last.visceral-first.visceral).toFixed(1)}
+  `;
+}
+
 /* ================== EXPORT / IMPORT ================== */
-function exportCSV(){
-  const d=getData();
-  let csv='Fecha,Día,Ejercicio,Peso,Series,Reps,Notas\n';
-  d.forEach(w=>csv+=`${w.date},${w.day},${w.exercise},${w.weight},${w.sets},${w.reps},"${w.notes}"\n`);
-  download(csv,'runfitlife.csv','text/csv');
-}
-function exportBackup(){download(JSON.stringify(getData()),'backup.json','application/json');}
-function importBackup(e){
-  const f=e.target.files[0];
-  if(!f) return;
-  const r=new FileReader();
-  r.onload=()=>{saveData(JSON.parse(r.result));refresh();};
-  r.readAsText(f);
-}
-function clearAll(){
-  if(confirm('¿Seguro?')){
-    localStorage.clear();
-    refresh();
-    renderBodyChart();
-    renderLastBody();
-    renderBodyHistory();
-  }
-}
-function download(c,n,t){
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([c],{type:t}));
-  a.download=n;
-  a.click();
-}
+function exportCSV(){ const d=getData(); let csv='Fecha,Día,Ejercicio,Peso,Series,Reps,Notas\n'; d.forEach(w=>csv+=`${w.date},${w.day},${w.exercise},${w.weight},${w.sets},${w.reps},"${w.notes}"\n`); download(csv,'runfitlife.csv','text/csv'); }
+function exportBackup(){ download(JSON.stringify(getData()),'backup.json','application/json'); }
+function importBackup(e){ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{saveData(JSON.parse(r.result)); refresh();}; r.readAsText(f); }
+function clearAll(){ if(confirm('¿Seguro?')){ localStorage.clear(); refresh(); renderBodyChart(); renderLastBody(); renderBodyHistory(); } }
+
+function download(c,n,t){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([c],{type:t})); a.download=n; a.click(); }
 
 function toggleDark(){document.body.classList.toggle('dark');}
 
-/* INIT */
-qs('filterDate').value=today();
+/* ================== INIT ================== */
 updateExerciseOptions();
 refresh();
-renderLastBody();
 renderBodyChart();
+renderLastBody();
 </script>
 
 </body>
