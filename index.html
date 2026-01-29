@@ -110,6 +110,14 @@ footer{text-align:center;font-size:.8rem;color:var(--muted);margin:2rem 0 1rem}
   <p id="maxWeight"></p>
 </div>
 
+<div class="card">
+  <h2>📦 Gestión de datos</h2>
+  <button class="secondary" type="button" onclick="exportCSV()">Exportar CSV</button>
+  <button class="secondary" type="button" onclick="exportBackup()">⬇️ Copia de seguridad JSON</button>
+  <input type="file" id="importFile" accept="application/json" onchange="importBackup(event)">
+  <button class="danger" type="button" onclick="clearAll()">Borrar todo</button>
+</div>
+
 <footer>Run Fit Life · PWA</footer>
 
 <script>
@@ -146,6 +154,7 @@ const filterDate=qs('filterDate');
 const log=qs('log');
 const maxSelect=qs('maxExercise');
 const maxWeightEl=qs('maxWeight');
+const importFile=qs('importFile');
 
 /* ================== DATA ================== */
 const STORAGE_KEY='gym_workouts';
@@ -197,7 +206,6 @@ function renderLog(data){
 }
 
 function deleteEntry(i){const d=getData();d.splice(i,1);saveData(d);refresh();}
-
 function formatNumber(n){return Number.isInteger(n)?n:n.toFixed(3).replace(/\.?0+$/,'');}
 
 /* ================== MÁXIMO HISTÓRICO ================== */
@@ -222,6 +230,40 @@ function showMax(ex){
 }
 
 maxSelect.addEventListener('change',()=>showMax(maxSelect.value));
+
+/* ================== DATA EXPORT/IMPORT ================== */
+function exportCSV(){
+  const d=getData();
+  let csv='Fecha,Día,Ejercicio,Peso,Series,Reps,Notas\n';
+  d.forEach(w=>csv+=`${w.date},${w.day},${w.exercise},${w.weight},${w.sets},${w.reps},"${w.notes}"\n`);
+  download(csv,'runfitlife.csv','text/csv');
+}
+
+function exportBackup(){download(JSON.stringify(getData()),'backup.json','application/json');}
+
+function importBackup(e){
+  const f=e.target.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      saveData(JSON.parse(r.result));
+      refresh();
+      importFile.value='';
+      alert('Importación completada ✅');
+    }catch(err){alert('Error al importar JSON ❌');}
+  };
+  r.readAsText(f);
+}
+
+function clearAll(){
+  if(confirm('¿Seguro que quieres borrar todo?')){
+    localStorage.removeItem(STORAGE_KEY);
+    refresh();
+  }
+}
+
+function download(c,n,t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click();}
 
 /* ================== UTIL ================== */
 function today(){return new Date().toISOString().split('T')[0];}
