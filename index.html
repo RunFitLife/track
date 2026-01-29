@@ -99,6 +99,11 @@ footer{text-align:center;font-size:.8rem;color:var(--muted);margin:2rem 0 1rem}
   <button class="primary" type="submit">Guardar</button>
 </form>
 
+<div class="card">
+  <h2>🔍 Ver entrenamientos por fecha</h2>
+  <input type="date" id="filterDate">
+</div>
+
 <div id="log"></div>
 
 <div class="card">
@@ -154,15 +159,14 @@ const exerciseSelect=qs('exercise');
 const log=qs('log');
 const maxSelect=qs('maxSelect');
 const maxWeightEl=qs('maxWeight');
+const filterDate=qs('filterDate');
 
 /* ================== DATA ================== */
 function getData(){return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}
 function saveData(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}
 
 /* ================== HELPERS ================== */
-function formatNumber(n){
-  return Number(n.toFixed(3)).toString().replace(/\.?0+$/,'');
-}
+function formatNumber(n){return Number(n.toFixed(3)).toString().replace(/\.?0+$/,'');}
 
 /* ================== WORKOUT ================== */
 function updateExerciseOptions(){
@@ -185,10 +189,19 @@ function updateExerciseOptions(){
   if(isAbs) qs('weight').value = 0;
 }
 
+/* ================== LOG ================== */
 function renderLog(){
-  const data=getData();
-  log.innerHTML='';
-  data.forEach((w,i)=>{
+  const data = getData();
+  const dateToShow = filterDate.value || today();
+  const filtered = data.filter(w => w.date === dateToShow);
+
+  log.innerHTML = '';
+  if(!filtered.length){
+    log.innerHTML = `<p>No hay entrenamientos para ${dateToShow}</p>`;
+    return;
+  }
+
+  filtered.forEach((w,i)=>{
     const e=document.createElement('div');
     e.className='entry';
     e.innerHTML = `
@@ -197,16 +210,19 @@ function renderLog(){
         <span>${formatNumber(w.weight)} kg · ${w.sets}x${w.reps}</span><br>
         ${w.notes ? `<em>Notas: ${w.notes}</em>` : ''}
       </div>
-      <button class="danger small" onclick="deleteEntry(${i})">🗑️</button>
+      <button class="danger small" onclick="deleteEntryById('${w.date}', ${i})">🗑️</button>
     `;
     log.appendChild(e);
   });
 }
 
-function deleteEntry(i){
-  const d=getData();
-  d.splice(i,1);
-  saveData(d);
+function deleteEntryById(date,i){
+  const data = getData();
+  const dateEntries = data.filter(w => w.date === date);
+  const entry = dateEntries[i];
+  const idx = data.indexOf(entry);
+  if(idx>-1) data.splice(idx,1);
+  saveData(data);
   refresh();
 }
 
@@ -243,9 +259,7 @@ function exportCSV(){
   d.forEach(w=>csv+=`${w.date},${w.day},${w.exercise},${w.weight},${w.sets},${w.reps},"${w.notes}"\n`);
   download(csv,'runfitlife.csv','text/csv');
 }
-
 function exportBackup(){download(JSON.stringify(getData()),'backup.json','application/json');}
-
 function importBackup(e){
   const f = e.target.files[0];
   if(!f) return;
@@ -264,14 +278,12 @@ function importBackup(e){
   };
   r.readAsText(f);
 }
-
 function clearAll(){
   if(confirm('¿Seguro?')){
     localStorage.clear();
     refresh();
   }
 }
-
 function download(c,n,t){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([c],{type:t}));
@@ -302,10 +314,9 @@ form.addEventListener('submit',e=>{
 daySelect.addEventListener('change', () => {
   updateExerciseOptions();
   qs('weight').value = daySelect.value === 'Día 4 - Abdominales' ? 0 : '';
-  refresh();
 });
-
 maxSelect.addEventListener('change', ()=>showMax(maxSelect.value));
+filterDate.addEventListener('change', refresh);
 
 /* ================== DARK MODE ================== */
 function toggleDark(){document.body.classList.toggle('dark');}
@@ -318,6 +329,7 @@ function refresh(){
 
 /* ================== INIT ================== */
 updateExerciseOptions();
+filterDate.value = today();
 refresh();
 </script>
 </body>
