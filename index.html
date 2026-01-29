@@ -56,8 +56,11 @@ button.small{font-size:.75rem;padding:.3rem .6rem}
 }
 .entry strong{font-size:.95rem}
 .entry span{font-size:.85rem;color:var(--muted)}
-.entry em{font-size:.85rem;color:var(--muted)}
-select.maxSelect{margin-top:.5rem;padding:.5rem;border-radius:10px;font-size:.9rem;}
+.badge{
+  display:inline-block;padding:.25rem .6rem;border-radius:999px;
+  font-size:.75rem;background:var(--accent);color:#022c22;font-weight:600;
+  margin:.15rem;
+}
 footer{text-align:center;font-size:.8rem;color:var(--muted);margin:2rem 0 1rem}
 </style>
 </head>
@@ -96,70 +99,70 @@ footer{text-align:center;font-size:.8rem;color:var(--muted);margin:2rem 0 1rem}
   <button class="primary" type="submit">Guardar</button>
 </form>
 
-<div class="card">
-  <h2>🔍 Filtrar por fecha</h2>
-  <input type="date" id="filterDate">
-</div>
-
 <div id="log"></div>
 
 <div class="card">
-  <h2>📊 Máximo histórico por ejercicio</h2>
-  <label>Selecciona ejercicio</label>
-  <select id="maxExercise" class="maxSelect"></select>
+  <h2>🏋️ Máximo histórico por ejercicio</h2>
+  <select id="maxSelect"></select>
   <p id="maxWeight"></p>
 </div>
 
 <div class="card">
   <h2>📦 Gestión de datos</h2>
   <button class="secondary" type="button" onclick="exportCSV()">Exportar CSV</button>
-  <button class="secondary" type="button" onclick="exportBackup()">⬇️ Copia de seguridad JSON</button>
+  <button class="secondary" type="button" onclick="exportBackup()">⬇️ Copia de seguridad</button>
   <input type="file" id="importFile" accept="application/json" onchange="importBackup(event)">
   <button class="danger" type="button" onclick="clearAll()">Borrar todo</button>
 </div>
+</main>
 
 <footer>Run Fit Life · PWA</footer>
 
 <script>
 /* ================== CONFIG ================== */
 const exercisesByDay = {
-  'Día 1 - Empuje': {
-    'Pecho': ['Press banca','Press banca inclinado','Press banca declinado','Press banca en máquina','Aperturas en máquina','Máquina pectoral alemana','Press banca con mancuernas','Press banca inclinado con mancuernas'],
-    'Hombro': ['Press militar con mancuernas','Press militar con barra','Elevaciones frontales con mancuernas','Elevaciones frontales con polea','Elevaciones frontales lamine','Elevaciones laterales con mancuernas','Elevaciones laterales con polea','Máquina de press de hombro','Máquina de aperturas de hombro','Máquina alemana de hombro','Barra a la barbilla'],
-    'Tríceps': ['Extensión de tríceps con cuerda','Extensión de tríceps con polea','Extensión de tríceps con barra','Extensión de tríceps unilateral con polea','Tríceps katana','Extensión de tríceps por encima de la cabeza con polea','Fondos en máquina sentada','Fondos en máquina de dominadas']
-  },
-  'Día 2 - Tirón': {
-    'Espalda': ['Remo con barra T','Iso-lateral Row','Iso-lateral D.Y. Row','Iso-lateral High Row','Iso-lateral Front Lat Pulldown','Remo con barra','Remo sentado con polea','Pullover','Dominadas','Jalón al pecho agarre neutro','Jalón al pecho agarre cerrado','Jalón al pecho agarre abierto','Jalón máquina amarilla','Remo normal máquina amarilla','Remo bajo máquina amarilla','Remo unilateral'],
-    'Bíceps': ['Curl de bíceps con barra','Curl de bíceps con mancuernas','Curl de bíceps en banco Scott','Curl de bíceps cerrado en máquina amarilla','Curl de bíceps concentrado con mancuerna','Curl de bíceps en banco inclinado (brazos atrás)','Curl de bíceps bayesian','Curl martillo con mancuernas','Curl martillo en polea'],
-    'Hombro posterior': ['Posterior en máquina de aperturas','Aperturas posterior en polea unilateral','Facepull','Pájaros posterior']
-  },
-  'Día 3 - Piernas y Glúteo': {
-    'Cuádriceps': ['Sentadilla con barra','Sentadilla en multipower','Prensa de pierna con discos','Prensa de pierna con máquina','Hack sentadilla','Extensión de cuádriceps con máquina amarilla','Extensión de cuádriceps con máquina','Sentadilla búlgara','Zancadas con peso','Sentadilla sumo con peso','Sentadilla con mancuerna'],
-    'Femoral': ['Peso muerto','Femoral en máquina acostada','Femoral en máquina sentada','Femoral en máquina unilateral de pie'],
-    'Glúteo': ['Hip thrust','Puente de glúteo con peso','Patada de glúteo en máquina','Patada de glúteo en polea'],
-    'Aductores / Abductores': ['Abductor en máquina sentada','Abductor en máquina de pie','Aductor en máquina sentada'],
-    'Gemelos': ['Sóleo','Gemelos en prensa']
-  },
-  'Día 4 - Abdominales': {
-    'Abdominales': ['Plancha isométrica','Plancha lateral','Crunch abdominal acostado','Crunch abdominal en polea','Crunch abdominal en máquina','Elevaciones de piernas','Bichos boca arriba','Abdominales oblicuos']
-  }
+'Día 1 - Empuje': {
+  'Pecho': ['Press banca','Press banca inclinado','Press banca declinado','Press banca en máquina','Aperturas en máquina','Máquina pectoral alemana','Press banca con mancuernas','Press banca inclinado con mancuernas'],
+  'Hombro': ['Press militar con mancuernas','Press militar con barra','Elevaciones frontales con mancuernas','Elevaciones frontales con polea','Elevaciones frontales lamine','Elevaciones laterales con mancuernas','Elevaciones laterales con polea','Máquina de press de hombro','Máquina de aperturas de hombro','Máquina alemana de hombro','Barra a la barbilla'],
+  'Tríceps': ['Extensión de triceps con cuerda','Extensión de triceps con polea','Extensión de tríceps con barra','Extensión de triceps unilateral con polea','Tríceps katana','Extensión de triceps por encima de la cabeza con polea','Fondos en máquina sentada','Fondos en máquina de dominadas']
+},
+'Día 2 - Tirón': {
+  'Espalda': ['Remo con barra T','Iso-Lateral Row','Iso-Lateral D.Y. Row','Iso-Lateral High Row','Iso Lateral Front Lat Pulldown','Remo con barra','Remo sentado con polea','Pullover','Dominadas','Jalón al pecho agarre neutro','Jalón al pecho agarre cerrado','Jalón al pecho agarre abierto','Jalón máquina amarilla','Remo normal máquina amarilla','Remo bajo máquina amarilla','Remo unilateral'],
+  'Bíceps': ['Curl de bíceps con barra','Curl de bíceps con mancuernas','Curl de bíceps en banco Scott','Curl de bíceps cerrado en máquina amarilla','Curl de bíceps concentrado con mancuerna','Curl de bíceps banco inclinado (brazos atrás)','Curl de bíceps bayesian','Curl martillo con mancuernas','Curl martillo en polea'],
+  'Hombro posterior': ['Posterior en máquina de aperturas','Aperturas posterior en polea unilateral','Facepull','Pájaros posterior']
+},
+'Día 3 - Piernas y Glúteo': {
+  'Cuádriceps': ['Sentadilla con barra','Sentadilla en multipower','Prensa de pierna con discos','Prensa de pierna con máquina','Hack sentadilla','Extensión de cuadriceps con máquina amarilla','Extensión de cuadriceps con máquina','Sentadilla búlgara','Zancadas con peso','Sentadilla sumo con peso','Sentadilla con mancuerna'],
+  'Femoral': ['Peso muerto','Femoral en máquina acostada','Femoral en maquina sentada','Femoral en máquina unilateral de pie'],
+  'Glúteo': ['Hip thrust','Puente de gluteo con peso','Patada de gluteo en maquina','Patada de gluteo en polea'],
+  'Aductores/Abductores': ['Abductor en maquina sentada','Abductor en maquina de pie','Aductor en maquina sentada'],
+  'Gemelos': ['Soleo','Gemelos en prensa']
+},
+'Día 4 - Abdominales': {
+  'Abdominales': ['Plancha isometrica','Plancha lateral','Crunch abdominal acostado','Crunch abdominal en polea','Crunch abdominal en maquina','Elevaciones de piernas','Bichos boca arriba','Abdominales oblicuos']
+}
 };
 
-/* ================== ELEMENTS ================== */
+const STORAGE_KEY='gym_workouts';
 const qs=id=>document.getElementById(id);
+const today=()=>new Date().toISOString().split('T')[0];
+
+/* ================== ELEMENTS ================== */
 const form=qs('workoutForm');
 const daySelect=qs('day');
 const exerciseSelect=qs('exercise');
-const filterDate=qs('filterDate');
 const log=qs('log');
-const maxSelect=qs('maxExercise');
+const maxSelect=qs('maxSelect');
 const maxWeightEl=qs('maxWeight');
-const importFile=qs('importFile');
 
 /* ================== DATA ================== */
-const STORAGE_KEY='gym_workouts';
 function getData(){return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}
 function saveData(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}
+
+/* ================== HELPERS ================== */
+function formatNumber(n){
+  return Number(n.toFixed(3)).toString().replace(/\.?0+$/,'');
+}
 
 /* ================== WORKOUT ================== */
 function updateExerciseOptions(){
@@ -167,28 +170,23 @@ function updateExerciseOptions(){
   const day = daySelect.value;
   const groups = exercisesByDay[day];
   Object.keys(groups).forEach(groupName=>{
-    const optgroup=document.createElement('optgroup');
-    optgroup.label=groupName;
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = groupName;
     groups[groupName].forEach(ex=>{
-      const o=document.createElement('option'); o.textContent=ex;
-      optgroup.appendChild(o);
+      const option = document.createElement('option');
+      option.textContent = ex;
+      optgroup.appendChild(option);
     });
     exerciseSelect.appendChild(optgroup);
   });
   const isAbs = day==='Día 4 - Abdominales';
-  qs('weight').disabled=isAbs;
-  qs('weight').required=!isAbs;
-  if(isAbs) qs('weight').value=0;
+  qs('weight').disabled = isAbs;
+  qs('weight').required = !isAbs;
+  if(isAbs) qs('weight').value = 0;
 }
 
-function refresh(){
+function renderLog(){
   const data=getData();
-  const filtered=filterDate.value?data.filter(w=>w.date===filterDate.value):data.filter(w=>w.date===today());
-  renderLog(filtered);
-  renderMaxSelect(data);
-}
-
-function renderLog(data){
   log.innerHTML='';
   data.forEach((w,i)=>{
     const e=document.createElement('div');
@@ -205,33 +203,40 @@ function renderLog(data){
   });
 }
 
-function deleteEntry(i){const d=getData();d.splice(i,1);saveData(d);refresh();}
-function formatNumber(n){return Number.isInteger(n)?n:n.toFixed(3).replace(/\.?0+$/,'');}
+function deleteEntry(i){
+  const d=getData();
+  d.splice(i,1);
+  saveData(d);
+  refresh();
+}
 
-/* ================== MÁXIMO HISTÓRICO ================== */
-function renderMaxSelect(data){
+/* ================== MAX HISTÓRICO ================== */
+function renderMaxSelect(){
+  const data = getData();
   const exercises = [...new Set(data.map(w=>w.exercise))].sort();
   maxSelect.innerHTML='';
   exercises.forEach(ex=>{
     const o=document.createElement('option');
-    o.value=ex;
-    o.textContent=ex;
+    o.value = ex;
+    o.textContent = ex;
     maxSelect.appendChild(o);
   });
-  if(exercises.length>0) showMax(exercises[0]);
-  else maxWeightEl.textContent='';
+  if(exercises.length>0){
+    maxSelect.value = exercises[0];
+    showMax(exercises[0]);
+  } else {
+    maxWeightEl.textContent='';
+  }
 }
 
 function showMax(ex){
-  const data=getData().filter(w=>w.exercise===ex);
-  if(!data.length){maxWeightEl.textContent='No hay datos'; return;}
-  let maxEntry = data.reduce((a,b)=>b.weight>a.weight?b:a);
-  maxWeightEl.textContent=`Máximo histórico: ${formatNumber(maxEntry.weight)} kg · ${maxEntry.date}`;
+  const data = getData().filter(w=>w.exercise===ex);
+  if(!data.length){ maxWeightEl.textContent=''; return; }
+  let maxEntry = data.reduce((a,b)=>b.weight>a.weight ? b : a);
+  maxWeightEl.textContent = `Máximo histórico: ${formatNumber(maxEntry.weight)} kg · ${maxEntry.date}`;
 }
 
-maxSelect.addEventListener('change',()=>showMax(maxSelect.value));
-
-/* ================== DATA EXPORT/IMPORT ================== */
+/* ================== EXPORT/IMPORT ================== */
 function exportCSV(){
   const d=getData();
   let csv='Fecha,Día,Ejercicio,Peso,Series,Reps,Notas\n';
@@ -242,34 +247,39 @@ function exportCSV(){
 function exportBackup(){download(JSON.stringify(getData()),'backup.json','application/json');}
 
 function importBackup(e){
-  const f=e.target.files[0];
+  const f = e.target.files[0];
   if(!f) return;
-  const r=new FileReader();
-  r.onload=()=>{
-    try{
-      saveData(JSON.parse(r.result));
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const data = JSON.parse(r.result);
+      if(!Array.isArray(data)) throw new Error('Formato inválido');
+      saveData(data);
       refresh();
-      importFile.value='';
+      importFile.value = '';
       alert('Importación completada ✅');
-    }catch(err){alert('Error al importar JSON ❌');}
+    } catch(err){
+      alert('Error al importar JSON ❌');
+    }
   };
   r.readAsText(f);
 }
 
 function clearAll(){
-  if(confirm('¿Seguro que quieres borrar todo?')){
-    localStorage.removeItem(STORAGE_KEY);
+  if(confirm('¿Seguro?')){
+    localStorage.clear();
     refresh();
   }
 }
 
-function download(c,n,t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click();}
+function download(c,n,t){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([c],{type:t}));
+  a.download=n;
+  a.click();
+}
 
-/* ================== UTIL ================== */
-function today(){return new Date().toISOString().split('T')[0];}
-function toggleDark(){document.body.classList.toggle('dark');}
-
-/* ================== FORM ================== */
+/* ================== FORM SUBMIT ================== */
 form.addEventListener('submit',e=>{
   e.preventDefault();
   const d=getData();
@@ -288,8 +298,25 @@ form.addEventListener('submit',e=>{
   refresh();
 });
 
+/* ================== SELECT CHANGE ================== */
+daySelect.addEventListener('change', () => {
+  updateExerciseOptions();
+  qs('weight').value = daySelect.value === 'Día 4 - Abdominales' ? 0 : '';
+  refresh();
+});
+
+maxSelect.addEventListener('change', ()=>showMax(maxSelect.value));
+
+/* ================== DARK MODE ================== */
+function toggleDark(){document.body.classList.toggle('dark');}
+
+/* ================== REFRESH ================== */
+function refresh(){
+  renderLog();
+  renderMaxSelect();
+}
+
 /* ================== INIT ================== */
-filterDate.value=today();
 updateExerciseOptions();
 refresh();
 </script>
