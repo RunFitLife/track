@@ -134,7 +134,7 @@ const exercisesByDay = {
 'Día 2 - Tirón': {
   'Espalda': ['Remo con barra T','Iso-Lateral Row','Iso-Lateral D.Y. Row','Iso-Lateral High Row','Iso Lateral Front Lat Pulldown','Remo con barra','Remo sentado con polea','Pullover','Dominadas','Jalón al pecho agarre neutro','Jalón al pecho agarre cerrado','Jalón al pecho agarre abierto','Jalón máquina amarilla','Remo normal máquina amarilla','Remo bajo máquina amarilla','Remo unilateral'],
   'Bíceps': ['Curl de bíceps con barra','Curl de bíceps con mancuernas','Curl de bíceps en banco Scott','Curl de bíceps cerrado en máquina amarilla','Curl de bíceps concentrado con mancuerna','Curl de bíceps banco inclinado (brazos atrás)','Curl de bíceps bayesian','Curl martillo con mancuernas','Curl martillo en polea'],
-  'Hombro posterior': ['Posterior en máquina de aperturas','Aperturas posterior en polea unilateral','Facepull','Pájaros posterior']
+  'Hombro posterior': ['Posterior en máquina de aperturas','Máquina posterior moto','Aperturas posterior en polea unilateral','Facepull','Pájaros posterior']
 },
 'Día 3 - Piernas y Glúteo': {
   'Cuádriceps': ['Sentadilla con barra','Sentadilla en multipower','Prensa de pierna con discos','Prensa de pierna con máquina','Hack sentadilla','Extensión de cuadriceps con máquina amarilla','Extensión de cuadriceps con máquina','Sentadilla búlgara','Zancadas con peso','Sentadilla sumo con peso','Sentadilla con mancuerna'],
@@ -166,7 +166,12 @@ function getData(){return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}
 function saveData(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}
 
 /* ================== HELPERS ================== */
-function formatNumber(n){return Number(n.toFixed(3)).toString().replace(/\.?0+$/,'');}
+function formatNumber(n){
+  n = Number(n); // aseguramos que sea número
+  if (isNaN(n)) return ''; // si no es número, devolvemos vacío
+  if (Number.isInteger(n)) return n.toString();
+  return n.toFixed(3).replace(/\.?0+$/,'');
+}
 
 /* ================== WORKOUT ================== */
 function updateExerciseOptions(){
