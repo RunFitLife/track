@@ -46,3 +46,9 @@ Si quieres una dirección tipo `runfitlife.com`, compra el dominio (unos 10-15 �
 ## Importante sobre los datos
 
 Los entrenos se guardan en el móvil de cada persona, en el navegador, y no se envían a ningún sitio. Los datos que tengas ahora en el enlace de prueba **no pasan solos** a la nueva dirección: en Ajustes del enlace de prueba copia la copia de seguridad, y pégala en "Recuperar datos" de la nueva dirección.
+
+## Antes de promocionarla
+
+- Revisa el aviso legal de la app (Ajustes, "Aviso legal y privacidad") y completa tus datos de contacto. Si más adelante cobras por la app o muestras publicidad, tendrás que completarlo más (identificación de la titular, etc.). Ese texto es orientativo y no es asesoramiento jurídico: si tienes dudas, consúltalo con un profesional.
+- Las tipografías se cargan desde Google Fonts, y eso envía la dirección IP de quien visita la web a Google. El aviso legal ya lo menciona. Si prefieres evitarlo, se pueden incluir las fuentes dentro de la propia web o usar las del sistema.
+- El sonido de fin de descanso necesita que la pantalla siga encendida y el móvil no esté en silencio. Durante el entreno la app mantiene la pantalla activa.

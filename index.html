@@ -565,6 +565,7 @@ function save(){
 }
 if(!S.notes) S.notes={};
 if(!S.coach) S.coach={block:1,start:startOfWeek()};
+if(!S.settings) S.settings={sound:true,vibrate:true};
 var PLAN_V=6,migrated=false;
 if(S.profile&&S.pv!==PLAN_V){
   if(S.active){S.active.entries=S.active.entries.filter(function(e){return BY[e.exId]});if(!S.active.entries.length)S.active=null}
@@ -859,7 +860,7 @@ function viewWizard(){
   h+='</div>';
   var titles=['¿Cuál es tu nivel?','¿Qué quieres conseguir?','¿Cuántos días a la semana puedes entrenar?','¿Cuánto tiempo tienes por sesión?','¿Con qué material cuentas?','¿Quieres cuidar alguna zona?'];
   h+='<h1 class="h1" style="font-size:38px;margin-top:14px">'+titles[st]+'</h1>';
-  if(st===0) h+='<p class="muted">Responde 6 preguntas y RunFitLife monta tu semana de entrenos.</p>';
+  if(st===0) h+='<p class="muted">Responde 6 preguntas y RunFitLife monta tu semana de entrenos.</p><p class="muted small">Las rutinas son orientativas. Al continuar aceptas el <button class="linkbtn" data-a="legal">aviso legal y de privacidad</button>.</p>';
   if(st===5) h+='<p class="muted">Evitaremos los ejercicios que más cargan esa zona. Puedes saltarte este paso.</p>';
   if(st===0) LEVELS.forEach(function(l){
     h+='<button class="opt" data-a="wizPick" data-k="level" data-v="'+l.v+'" aria-pressed="'+(d.level===l.v)+'">'+plate(lvlColor(l.v),34)+'<span><span class="t">'+l.n+'</span><br><span class="d">'+l.d+'</span></span></button>';
@@ -996,11 +997,12 @@ function viewProgreso(){
   return h+'</div>';
 }
 
-function backupJson(){return JSON.stringify({v:1,profile:S.profile,plan:S.plan,sessions:S.sessions,cursor:S.cursor,notes:S.notes,customPlan:!!S.customPlan,coach:S.coach})}
+function backupJson(){return JSON.stringify({v:1,profile:S.profile,plan:S.plan,sessions:S.sessions,cursor:S.cursor,notes:S.notes,customPlan:!!S.customPlan,coach:S.coach,settings:S.settings})}
 function viewAjustes(){
   var P=S.profile,h=brandBar()+'<h1 class="h1">Ajustes</h1>';
   h+='<div class="list"><div class="row">'+plate(lvlColor(P.level),34)+'<div class="grow"><div class="t">'+esc(lvlName(P.level))+', '+esc(goalName(P.goal).toLowerCase())+'</div><div class="sub">'+P.days+' días, '+P.mins+' min, '+esc(equipName(P.equip).toLowerCase())+(P.avoid.length?'. Cuidando: '+P.avoid.map(function(a){return AVOID.filter(function(x){return x.v===a})[0].n.toLowerCase()}).join(', '):'')+'</div></div></div></div>';
   h+='<div class="stack" style="margin-top:10px"><button class="btn ghost" data-a="editProfile">Cambiar mis datos y rehacer la rutina</button></div>';
+  h+=avisosHtml();
   h+='<h2 class="h2">Copia de seguridad</h2><p class="muted small">Tus datos se guardan solo en este navegador. Copia este texto y guárdalo (en una nota o un correo) para recuperarlos si cambias de móvil.</p>';
   if(!storageOK) h+='<p class="small" style="color:var(--red)">Este navegador no permite guardar datos: al cerrar la página se perderán. Haz copia de seguridad.</p>';
   h+='<textarea id="bk" readonly aria-label="Copia de seguridad">'+esc(backupJson())+'</textarea>';
@@ -1012,7 +1014,7 @@ function viewAjustes(){
     h+='<h2 class="h2">Instalar la app</h2><p class="muted small">Añade RunFitLife a tu pantalla de inicio para abrirla como una app. En iPhone: botón compartir de Safari y "Añadir a pantalla de inicio". En Android: menú del navegador y "Instalar app".</p>'+(installEv?'<button class="btn" data-a="install">Instalar RunFitLife</button>':'');
   }
   h+='<h2 class="h2">Datos</h2><button class="btn warn" data-a="wipe">Borrar todos los datos</button>';
-  h+='<p class="muted small" style="margin-top:22px">RunFitLife es gratuita y no pide datos personales. Las rutinas son orientativas: si tienes una lesión o dudas de salud, consúltalo antes con un profesional.</p>';
+  h+='<p class="muted small" style="margin-top:22px">RunFitLife es gratuita y no pide datos personales. Las rutinas son orientativas: si tienes una lesión o dudas de salud, consúltalo antes con un profesional.</p><button class="linkbtn" data-a="legal">Aviso legal y privacidad</button>';
   return h;
 }
 
@@ -1160,6 +1162,9 @@ function sheetHtml(){
     b+='<div class="list" id="picklist" style="margin-top:10px">'+pickListHtml(sh)+'</div>';
     b+='<button class="btn quiet" style="margin-top:10px" data-a="closeSheet">Cerrar</button>';
   }
+  if(sh.type==='legal'){
+    b+=legalHtml();
+  }
   if(sh.type==='rir'){
     var P=S.profile,ej=function(c,id){return rirRec({c:c,id:id,t:false},P)};
     b+='<h2>¿Qué es el RIR?</h2><p>RIR significa <b>repeticiones en reserva</b>: cuántas repeticiones más podrías hacer, con buena técnica, justo al terminar una serie.</p>';
@@ -1230,6 +1235,53 @@ function sessionTotals(ss){
   ss.vol=vol;ss.setsN=n;
 }
 
+/* ---------- avisos sonoros y aviso legal ---------- */
+function setting(k){return !S.settings||S.settings[k]!==false}
+var audioCtx=null;
+function audioUnlock(){
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC) return;
+    if(!audioCtx) audioCtx=new AC();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+  }catch(e){}
+}
+function beep(n){
+  try{
+    if(!audioCtx) return;
+    var t0=audioCtx.currentTime;
+    for(var i=0;i<(n||2);i++){
+      var o=audioCtx.createOscillator(),g=audioCtx.createGain(),t=t0+i*0.3;
+      o.type='sine';o.frequency.value=880;
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.4,t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.22);
+      o.connect(g);g.connect(audioCtx.destination);
+      o.start(t);o.stop(t+0.24);
+    }
+  }catch(e){}
+}
+function avisosHtml(){
+  var snd=setting('sound'),vib=setting('vibrate');
+  return '<h2 class="h2">Avisos de descanso</h2><div class="list">'+
+    '<button class="row" data-a="toggleSetting" data-k="sound" role="switch" aria-checked="'+snd+'"><div class="grow"><div class="t">Sonido al acabar el descanso</div><div class="sub">Tres pitidos suaves. Si el móvil está en silencio, puede que no suene.</div></div><div class="end">'+(snd?'Sí':'No')+'</div></button>'+
+    '<button class="row" data-a="toggleSetting" data-k="vibrate" role="switch" aria-checked="'+vib+'"><div class="grow"><div class="t">Vibración</div><div class="sub">Solo en móviles Android. El iPhone no la permite en apps web.</div></div><div class="end">'+(vib?'Sí':'No')+'</div></button>'+
+    '</div><div class="stack" style="margin-top:10px"><button class="btn ghost" data-a="testSound">Probar el sonido</button></div>'+
+    '<p class="muted small" style="margin-top:8px">Para que suene, la pantalla tiene que seguir encendida: durante el entreno la app la mantiene activa.</p>';
+}
+function legalHtml(){
+  var sec=function(t,x){return '<h3 style="font:700 21px/1.1 var(--f-display);margin:16px 0 4px">'+t+'</h3><p class="small" style="margin:0">'+x+'</p>'};
+  return '<h2>Aviso legal y privacidad</h2>'+
+    sec('Qué es RunFitLife','Una app gratuita que propone rutinas de entrenamiento y te permite registrar tus series. Se ofrece tal cual, sin garantías.')+
+    sec('Orientativa, no médica','Las rutinas, los pesos, las repeticiones, el RIR y los consejos son orientativos y no sustituyen a un médico ni a un entrenador profesional. Consulta con un profesional antes de empezar si tienes lesiones, dolor o problemas de salud. Si eres menor de edad, hazlo con tus padres o tutores. Para ante cualquier dolor o mareo. Entrenas bajo tu propia responsabilidad.')+
+    sec('Tus datos','RunFitLife no pide cuenta, nombre, correo ni ningún dato personal. Tu rutina, tus pesos, tus notas y tu historial se guardan solo en este dispositivo, en el almacenamiento del navegador. No se envían a ningún servidor de RunFitLife ni se comparten con terceros. Si borras los datos del navegador o desinstalas la app, se pierden: haz copias de seguridad en Ajustes.')+
+    sec('Servicios de terceros','Para mostrar las tipografías, tu navegador se conecta a Google Fonts, y la página se aloja en un servicio externo. Como en cualquier web, estos servicios pueden registrar tu dirección IP. Los botones de vídeo abren búsquedas en YouTube, que tiene sus propias condiciones y su propia política de privacidad.')+
+    sec('Control de tus datos','Como los datos están solo en tu dispositivo, el control es tuyo: puedes verlos, copiarlos y borrarlos desde Ajustes con la copia de seguridad y "Borrar todos los datos".')+
+    sec('Contacto','@runfitlife24 en Instagram.')+
+    '<p class="muted small" style="margin-top:14px">Última actualización: noviembre de 2026.</p>'+
+    '<button class="btn" style="margin-top:12px" data-a="closeSheet">Entendido</button>';
+}
+
 function render(){
   var v=$('#view'),nav=$('#nav');
   if(!S.profile||ui.wiz){v.innerHTML=viewWizard();nav.hidden=true}
@@ -1252,7 +1304,7 @@ function tick(){
   if(ui.rest&&ui.working){
     var left=Math.ceil((ui.rest.end-Date.now())/1000);
     if(left<=0){
-      if(!ui.rest.done){ui.rest.done=true;try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}}
+      if(!ui.rest.done){ui.rest.done=true;if(setting('vibrate')){try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}}if(setting('sound')) beep(3)}
       $('#rt').textContent='0:00';$('#rl').textContent='Listo para la siguiente serie';$('#rf').style.width='100%';
       if(Date.now()>ui.rest.end+10000){ui.rest=null;render()}
     }else{
@@ -1352,6 +1404,13 @@ var actions={
     render();
   },
   rirInfo:function(){ui.sheet={type:'rir'};render()},
+  legal:function(){ui.sheet={type:'legal'};render()},
+  toggleSetting:function(d){
+    if(!S.settings) S.settings={sound:true,vibrate:true};
+    S.settings[d.k]=!(S.settings[d.k]!==false);
+    save();render();
+  },
+  testSound:function(){audioUnlock();beep(3);toast('Si no has oído nada, revisa el volumen y el modo silencio')},
   toggleBlock:function(){ui.blockOpen=!ui.blockOpen;render()},
   fillTarget:function(d){
     var en=S.active.entries[+d.e],ct=coachTarget(en.exId,en.plan.reps,en.plan.rir,en.plan.deload);if(!ct) return;
@@ -1552,7 +1611,7 @@ var actions={
     try{data=JSON.parse(raw)}catch(e){toast('No he podido leer ese texto');return}
     if(!data||data.v!==1||!Array.isArray(data.plan)||!Array.isArray(data.sessions)||!data.profile||!Array.isArray(data.profile.avoid)){toast('Esa copia no es válida');return}
     ask('¿Recuperar esta copia?','Sustituirá tus datos actuales por los de la copia.','Recuperar',false,function(){
-      S={v:1,profile:data.profile,plan:data.plan,sessions:data.sessions,cursor:+data.cursor||0,active:null,notes:(data.notes&&typeof data.notes==='object')?data.notes:{},pv:PLAN_V,customPlan:!!data.customPlan,coach:data.coach||null};
+      S={v:1,profile:data.profile,plan:data.plan,sessions:data.sessions,cursor:+data.cursor||0,active:null,notes:(data.notes&&typeof data.notes==='object')?data.notes:{},pv:PLAN_V,customPlan:!!data.customPlan,coach:data.coach||null,settings:data.settings||null};
       if(!S.plan.every(function(d){return d&&Array.isArray(d.items)&&d.items.every(function(i){return BY[i.ex]})})){S.plan=generate(S.profile);S.cursor=0}
       ui.rest=null;ui.working=false;ui.wiz=null;save();toast('Datos recuperados');
     });
@@ -1566,6 +1625,7 @@ var actions={
 };
 
 document.addEventListener('click',function(e){
+  audioUnlock();
   var t=e.target.closest('[data-a]');if(!t) return;
   var fn=actions[t.dataset.a];if(fn) fn(t.dataset,e);
 });
