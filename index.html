@@ -182,6 +182,24 @@ textarea{width:100%;min-height:110px;border-radius:10px;border:2px solid var(--l
 .field span{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:4px}
 .fld,.sea{text-align:left;padding:0 12px;font-size:17px}
 .xbtn{width:40px;height:40px;border-radius:50%;border:2px solid var(--line);background:none;font:600 22px/1 var(--f-body);color:var(--muted);justify-self:center;padding:0}
+/* motivación */
+.streak{display:inline-block;background:var(--ink);color:var(--bg);border-radius:999px;padding:5px 14px;font-size:14px;font-weight:600;margin:0 0 12px}
+.motiv{font-size:16px;margin:0 0 12px;padding-left:12px;border-left:3px solid var(--blue)}
+.wprog{height:6px;border-radius:3px;background:var(--line);margin-top:10px;overflow:hidden}
+.wprog i{display:block;height:100%;background:var(--green);transition:width .3s}
+.coachmsg{background:var(--surface2);border-radius:14px;padding:12px 14px;margin:12px 0 0}
+.coachmsg b{font:700 23px/1.1 var(--f-display)}
+.coachmsg p{margin:6px 0 0}
+.hitos{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.hito{display:inline-grid;place-items:center;min-width:36px;height:36px;border-radius:18px;border:2px dashed var(--line);font:700 15px var(--f-display);color:var(--muted);padding:0 8px}
+.hito.on{background:var(--green);border:2px solid var(--green);color:#fff}
+.wbars{display:flex;align-items:stretch;gap:6px;height:130px}
+.wb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.wn{font:700 15px/1 var(--f-display);height:15px}
+.bar{flex:1;width:100%;display:flex;align-items:flex-end}
+.bar i{display:block;width:100%;border-radius:6px 6px 2px 2px;background:var(--line);min-height:2px}
+.bar i.ok{background:var(--green)}
+.wd{font-size:10px;color:var(--muted);white-space:nowrap}
 /* entrenador */
 .coach{background:var(--surface);border-radius:16px;padding:14px 16px;margin:0 0 14px;border-left:5px solid var(--green)}
 .coach-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
@@ -697,6 +715,95 @@ function makeEntry(it,idx){
 }
 function makeEntries(day){return day.items.map(function(it,i){return makeEntry(it,i)})}
 
+/* ---------- motivación, constancia y hitos ---------- */
+function weekStartOf(ts){var d=new Date(ts);d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.getTime()}
+function prevWeekOf(ts){var d=new Date(ts);d.setDate(d.getDate()-7);return d.getTime()}
+function weekCounts(){var m={};S.sessions.forEach(function(s){var k=weekStartOf(s.date);m[k]=(m[k]||0)+1});return m}
+function weekNeed(){var t=S.profile?S.profile.days:3;return t<=2?t:Math.max(2,t-1)}
+function streakWeeks(){
+  var m=weekCounts(),need=weekNeed(),k=weekStartOf(Date.now()),n=0;
+  if((m[k]||0)>=need) n=1;
+  for(;;){k=prevWeekOf(k);if((m[k]||0)>=need) n++;else break}
+  return n;
+}
+function bestStreak(){
+  var m=weekCounts(),ks=Object.keys(m).map(Number).sort(function(a,b){return a-b});
+  if(!ks.length) return 0;
+  var need=weekNeed(),best=0,run=0,k=ks[0],end=weekStartOf(Date.now());
+  while(k<=end){
+    if((m[k]||0)>=need){run++;if(run>best)best=run}else run=0;
+    var d=new Date(k);d.setDate(d.getDate()+7);k=d.getTime();
+  }
+  return best;
+}
+function totals(){
+  var vol=0,sets=0,prs=0;
+  S.sessions.forEach(function(s){vol+=s.vol||0;sets+=s.setsN||0;prs+=(s.prs||[]).length});
+  return {n:S.sessions.length,vol:vol,sets:sets,prs:prs};
+}
+var HITOS=[
+ {k:'n',t:'Entrenos',goals:[1,10,25,50,100],val:function(T){return T.n},txt:function(v){return v+' '+plural(v,'entreno','entrenos')}},
+ {k:'s',t:'Mejor racha semanal',goals:[2,4,8,12],val:function(T){return T.streak},txt:function(v){return v+' '+plural(v,'semana seguida','semanas seguidas')}},
+ {k:'v',t:'Peso total movido',goals:[10,50,100,250],val:function(T){return Math.floor(T.vol/1000)},txt:function(v,T){return Math.round(T.vol).toLocaleString('es-ES')+' kg ('+v+' t)'}},
+ {k:'r',t:'Récords personales',goals:[1,10,25,50],val:function(T){return T.prs},txt:function(v){return v+' '+plural(v,'récord','récords')}}
+];
+function hitosHtml(){
+  var T=totals();T.streak=bestStreak();
+  var h='<h2 class="h2">Hitos</h2><div class="list">';
+  HITOS.forEach(function(g){
+    var v=g.val(T),next=null;
+    g.goals.forEach(function(x){if(next===null&&v<x) next=x});
+    h+='<div class="row" style="flex-wrap:wrap"><div class="grow"><div class="t">'+g.t+'</div><div class="sub">'+esc(g.txt(v,T))+(next!==null?'. Próximo hito: '+next+(g.k==='v'?' t':''):'. Has superado todos los hitos')+'</div></div><div class="hitos" style="width:100%">'+g.goals.map(function(x){return '<span class="hito'+(v>=x?' on':'')+'">'+x+'</span>'}).join('')+'</div></div>';
+  });
+  return h+'</div><p class="muted small" style="margin:8px 0 0">Una semana cuenta para la racha si haces al menos '+weekNeed()+' '+plural(weekNeed(),'entreno','entrenos')+'.</p>';
+}
+function weeksChart(){
+  var m=weekCounts(),need=weekNeed(),tgt=S.profile.days,k=weekStartOf(Date.now()),arr=[];
+  for(var i=0;i<8;i++){arr.unshift({k:k,n:m[k]||0});k=prevWeekOf(k)}
+  var max=Math.max(tgt,Math.max.apply(null,arr.map(function(x){return x.n})),1);
+  var h='<h2 class="h2">Tu constancia</h2><div class="panelbox"><div class="wbars">';
+  arr.forEach(function(x){
+    var pct=Math.round(100*x.n/max);
+    h+='<div class="wb"><span class="wn">'+(x.n||'')+'</span><div class="bar"><i class="'+(x.n>=need?'ok':'')+'" style="height:'+(x.n?Math.max(8,pct):2)+'%"></i></div><span class="wd">'+fmtDate(x.k)+'</span></div>';
+  });
+  return h+'</div><p class="muted small" style="margin:10px 0 0">Entrenos por semana. En verde, las semanas cumplidas ('+need+' o más).</p></div>';
+}
+function coachMessage(sess,prevList){
+  var T=prevList.length,last=T?prevList[T-1]:null,pick=function(a){return a[sess.id%a.length]};
+  var names=function(){return sess.prs.slice(0,2).map(function(p){return exName(p.exId)}).join(' y ')};
+  if(!T) return {t:'¡Primer entreno hecho!',x:pick(['Lo más difícil es empezar y ya lo has conseguido.','Has dado el primer paso. A partir de aquí, cada semana suma.'])};
+  if(sess.prs.length) return {t:sess.prs.length>1?'¡Nuevos récords!':'¡Nuevo récord!',x:pick(['Has mejorado tu marca en '+names()+'. Ese trabajo se nota.','Superaste tu mejor marca en '+names()+'. Así se progresa.'])};
+  var gap=last?Math.floor((sess.date-last.date)/DAYMS):0;
+  if(gap>=10) return {t:'Volver es lo más difícil',x:'Han pasado '+gap+' días y has vuelto. Lo importante hoy era retomar el hábito, y lo has hecho.'};
+  var same=null;
+  for(var i=prevList.length-1;i>=0;i--){if(prevList[i].dayId===sess.dayId){same=prevList[i];break}}
+  if(same&&sess.dayId!=='libre'&&same.vol>0&&sess.vol>=same.vol*1.03){
+    return {t:'Has movido más que la última vez',x:'Un '+Math.round(100*(sess.vol/same.vol-1))+' % más de volumen que en tu último '+sess.dayName+'. Estás progresando.'};
+  }
+  if(sess.wk===5) return {t:'Semana de descarga completada',x:'Descansar también es entrenar. Llegarás al siguiente bloque con más fuerza.'};
+  var rirs=[];
+  sess.entries.forEach(function(e){e.sets.forEach(function(z){if(typeof z.rir==='number') rirs.push(z.rir)})});
+  if(rirs.length>=4&&rirs.reduce(function(x,y){return x+y},0)/rirs.length<=0.6) return {t:'Has apretado de verdad',x:'Muchas series casi al fallo. Cuida hoy el descanso y la comida para recuperar bien.'};
+  return {t:'Entreno completado',x:pick(['La constancia es lo que da resultados, y hoy has cumplido.','Un entreno más en el bolsillo. Sigue así.','Buen trabajo. Cada sesión cuenta aunque no sea la mejor.'])};
+}
+function todayMessage(day){
+  var st=coachState(),P=S.profile,cnt=weekSessions().length,last=S.sessions.length?S.sessions[S.sessions.length-1]:null;
+  var gap=last?Math.floor((Date.now()-last.date)/DAYMS):null;
+  if(!S.sessions.length) return 'Hoy empieza tu camino. Un primer entreno con buena técnica es más que suficiente.';
+  if(last&&new Date(last.date).toDateString()===new Date().toDateString()) return 'Ya has entrenado hoy. Buen trabajo: ahora toca descansar y recuperar.';
+  if(cnt>=P.days) return 'Has cumplido tu objetivo de esta semana. Si hoy entrenas de más, que sea suave.';
+  if(gap!==null&&gap>=8) return 'Hace '+gap+' días que no entrenas. Volver es lo importante: hoy basta con empezar.';
+  if(st.w.sets<0) return 'Semana de descarga: entrena ligero. Descansar también es progresar.';
+  var arr=['Un entreno más es un paso más. Hoy toca '+day.name+'.','La constancia gana a la motivación. Hoy toca '+day.name+'.','Cada serie bien hecha suma. Hoy toca '+day.name+'.','Hoy toca '+day.name+'. Tú pones el esfuerzo y yo te digo cuánto.'];
+  return arr[new Date().getDate()%arr.length];
+}
+function weekRecap(){
+  var pw=prevWeekOf(weekStartOf(Date.now())),n=0,vol=0,prs=0;
+  S.sessions.forEach(function(s){if(weekStartOf(s.date)===pw){n++;vol+=s.vol||0;prs+=(s.prs||[]).length}});
+  if(!n) return '';
+  return 'Semana pasada: '+n+' '+plural(n,'entreno','entrenos')+', '+Math.round(vol).toLocaleString('es-ES')+' kg movidos'+(prs?' y '+prs+' '+plural(prs,'récord','récords'):'')+'.';
+}
+
 function lastEntry(exId){
   for(var i=S.sessions.length-1;i>=0;i--){
     var e=S.sessions[i].entries.filter(function(x){return x.exId===exId&&x.sets.length})[0];
@@ -799,6 +906,10 @@ function viewHoy(){
   h+='<div class="week" aria-label="Entrenos de esta semana">';
   for(var i=0;i<target;i++) h+=plate('var(--green)',26,i<done?'':'ring');
   h+='<span class="txt">'+done+' de '+target+' esta semana</span></div>';
+  var stk=streakWeeks();
+  if(stk>=2) h+='<p class="streak">Racha de '+stk+' semanas cumpliendo tu objetivo</p>';
+  h+='<p class="motiv">'+esc(todayMessage(day))+'</p>';
+  var rcp=weekRecap();if(rcp) h+='<p class="muted small" style="margin:-4px 0 14px">'+esc(rcp)+'</p>';
   h+=coachBanner();
   if(!S.active) h+='<button class="btn" data-a="start" data-id="'+day.id+'">Empezar entreno</button><button class="btn ghost" style="margin-top:10px" data-a="startFree">Entreno libre</button>';
   h+='<h2 class="h2">Ejercicios de hoy</h2>'+exRows(day);
@@ -849,6 +960,7 @@ function viewProgreso(){
   if(!ss.length) return h+'<p class="muted">Aún no hay entrenos guardados. Cuando termines el primero, aquí verás tus cargas, tus récords y cómo evolucionas.</p>';
   var wk=weekSessions(),vol=wk.reduce(function(a,s){return a+s.vol},0);
   h+='<div class="stats"><div><b>'+wk.length+'</b><span>'+plural(wk.length,'entreno','entrenos')+' esta semana</span></div><div><b>'+ss.length+'</b><span>'+plural(ss.length,'entreno','entrenos')+' en total</span></div><div><b>'+Math.round(vol).toLocaleString('es-ES')+'</b><span>kg movidos esta semana</span></div></div>';
+  h+=weeksChart();
   var ids=[];
   for(var i=ss.length-1;i>=0;i--) ss[i].entries.forEach(function(e){if(ids.indexOf(e.exId)<0&&BY[e.exId])ids.push(e.exId)});
   if(ids.length){
@@ -876,6 +988,7 @@ function viewProgreso(){
     prs.forEach(function(r){h+='<div class="row"><div class="grow"><div class="t">'+esc(exName(r.p.exId))+'</div><div class="sub">'+fmtDate(r.d)+'</div></div><div class="end">'+fmtSet(r.p.exId,r.p)+'</div></div>'});
     h+='</div>';
   }
+  h+=hitosHtml();
   h+='<h2 class="h2">Historial</h2><div class="list"><button class="row" data-a="toggleHist" aria-expanded="'+ui.hist+'"><div class="grow"><div class="t">'+ss.length+' '+plural(ss.length,'entreno guardado','entrenos guardados')+'</div><div class="sub">'+(ui.hist?'Toca para ocultar la lista':'Toca para ver la lista')+'</div></div><div class="end">'+(ui.hist?'−':'+')+'</div></button>';
   if(ui.hist) ss.slice().reverse().slice(0,40).forEach(function(s){
     h+='<button class="row" data-a="openSession" data-id="'+s.id+'"><div class="grow"><div class="t">'+esc(s.dayName)+'</div><div class="sub">'+fmtDate(s.date)+', '+s.setsN+' series, '+clock(s.dur)+'</div></div><div class="end">'+Math.round(s.vol).toLocaleString('es-ES')+' kg</div></button>';
@@ -905,7 +1018,9 @@ function viewAjustes(){
 
 function viewWorkout(){
   var a=S.active,cs=coachState(),h='<div class="wk-head"><div class="grow"><b>'+esc(a.dayName)+'</b><span class="clock" id="el">'+clock((Date.now()-a.start)/1000)+'</span></div><button class="btn ghost sm" data-a="leaveWorkout">Salir</button><button class="btn sm" data-a="finish">Terminar</button></div>';
-  h+='<p class="muted small" style="margin:10px 0 0">Bloque '+cs.block+', semana '+cs.n+': '+esc(cs.w.name)+'. Si te equivocas, toca el círculo de una serie hecha para editarla.</p>';
+  var doneEx=a.entries.filter(function(e){return e.sets.length&&e.sets.every(function(s){return s.done})}).length;
+  h+='<div class="wprog" role="progressbar" aria-valuemin="0" aria-valuemax="'+a.entries.length+'" aria-valuenow="'+doneEx+'" aria-label="Ejercicios completados"><i style="width:'+(a.entries.length?Math.round(100*doneEx/a.entries.length):0)+'%"></i></div>';
+  h+='<p class="muted small" style="margin:8px 0 0">'+doneEx+' de '+a.entries.length+' ejercicios completados. Bloque '+cs.block+', semana '+cs.n+': '+esc(cs.w.name)+'. Si te equivocas, toca el círculo de una serie hecha para editarla.</p>';
   if(!a.entries.length) h+='<p class="muted" style="margin-top:16px">Aún no has añadido ningún ejercicio. Pulsa "Añadir ejercicio" para empezar.</p>';
   a.entries.forEach(function(en,i){
     var ex=BY[en.exId],rec=(en.plan.rir!==undefined)?String(en.plan.rir):rirRec(ex,S.profile);
@@ -984,6 +1099,8 @@ function sheetHtml(){
   if(sh.type==='summary'){
     var s=sh.s;
     b+='<h2>¡Entreno guardado!</h2><p class="muted">'+esc(s.dayName)+'</p><div class="sumgrid"><div><b>'+clock(s.dur)+'</b><span>duración</span></div><div><b>'+s.setsN+'</b><span>series</span></div><div><b>'+Math.round(s.vol).toLocaleString('es-ES')+'</b><span>kg movidos</span></div></div>';
+    if(s.msg) b+='<div class="coachmsg"><b>'+esc(s.msg.t)+'</b><p>'+esc(s.msg.x)+'</p></div>';
+    if(s.rc) b+='<p class="muted small" style="margin:8px 0 12px">'+(s.rc.n>=s.rc.target?'¡Semana completada! ':'Llevas '+s.rc.n+' de '+s.rc.target+' entrenos esta semana. ')+(s.rc.streak>=2?'Racha de '+s.rc.streak+' semanas seguidas. ':'')+(s.next?'Próximo entreno: '+esc(s.next)+'.':'')+'</p>';
     if(s.prs&&s.prs.length){
       b+='<p><b>Nuevos récords</b></p><div class="list">';
       s.prs.forEach(function(p){b+='<div class="row">'+plate('var(--yellow)',24)+'<div class="grow"><div class="t">'+esc(exName(p.exId))+'</div></div><div class="end">'+fmtSet(p.exId,p)+'</div></div>'});
@@ -1189,9 +1306,13 @@ function finishWorkout(){
   });
   var cs=coachState();
   var sess={id:Date.now(),date:Date.now(),dayId:a.dayId,dayName:a.dayName,dur:Math.round((Date.now()-a.start)/1000),entries:entries,vol:vol,setsN:setsN,prs:prs,fb:fb,wk:cs.n,block:cs.block};
+  var prevList=S.sessions.slice();
   S.sessions.push(sess);
   var idx=S.plan.findIndex(function(d){return d.id===a.dayId});
   if(idx>=0) S.cursor=(idx+1)%S.plan.length;
+  sess.msg=coachMessage(sess,prevList);
+  sess.rc={n:weekCounts()[weekStartOf(sess.date)]||1,need:weekNeed(),target:S.profile.days,streak:streakWeeks()};
+  sess.next=(S.plan[S.cursor]||{}).name||'';
   S.active=null;ui.rest=null;ui.working=false;ui.tab='hoy';
   save();ui.sheet={type:'summary',s:sess};render();window.scrollTo(0,0);
 }
@@ -1361,7 +1482,13 @@ var actions={
     var all=S.active.entries.every(function(e){return e.sets.every(function(s){return s.done})});
     ui.rest=all?null:{end:Date.now()+en.plan.rest*1000,total:en.plan.rest,done:false};
     render();
-    toast('Serie '+(+d.s+1)+' guardada',{label:'Deshacer',fn:function(){
+    var v0=score(en.exId,w,r),hist=bestOf(en.exId);
+    var others=en.sets.filter(function(s2){return s2!==st&&s2.done}).map(function(s2){return score(en.exId,pnum(s2.w)||0,pnum(s2.r)||0)});
+    var maxO=others.length?Math.max.apply(null,others):-1;
+    var isPR=hist!==null&&v0>hist+0.001&&v0>maxO;
+    var entryDone=en.sets.every(function(s2){return s2.done});
+    var msg=isPR?'¡Récord personal! Serie '+(+d.s+1)+' guardada':(all?'¡Entreno completo! Pulsa Terminar':(entryDone?'Ejercicio completado. Serie '+(+d.s+1)+' guardada':'Serie '+(+d.s+1)+' guardada'));
+    toast(msg,{label:'Deshacer',fn:function(){
       if(!S.active||!st) return;
       st.done=false;st.w=prev.w;st.r=prev.r;st.rir=prev.rir;ui.rest=prev.rest;
       save();render();
